@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# Globals
-ZEST_PATH=""
-DEBUG=false
-
 # Log an error message
 _error() {
 	printf "\e[34;1m====> $@\e[0m\n"
@@ -43,6 +39,9 @@ _build() {
 		component_path="$(pwd)/$(basename $rel_component)"
 		component_name=`basename $component_path`
 
+		_debug "Component path: $component_path"
+		_debug "Component name: $component_name"
+
 		# Skip components that don't have a Zestfile
 		if [[ ! -r $component_path/Zestfile ]]; then
 			_info "Skipping $component_name - no Zestfile"
@@ -58,9 +57,8 @@ _build() {
 		# Get the container name out of the Dokcerfile
 		from=`sed -n -E 's/^FROM ([a-zA-Z]+(\:.+)?)$/\1/p' $component_path/Dockerfile`
 
-		_info "Building component $component_name in $from container"
-
 		# Build the binary
+		_info "Building component $component_name in $from container"
 		docker run --rm -v $component_path:/$component_name -w /$component_name -v $ZEST_PATH:/usr/bin/zest $from zest builder --name $component_name || exit 2
 
 		# Build the container
@@ -99,7 +97,32 @@ _builder() {
 #
 # The test function is called on the host, launches the container with compose and runs the Zest tester inside it
 _test() {
-	echo "damn"
+	_debug "Using Zest from $ZEST_PATH"
+
+	# For each component (folders in the current directory that don't start with a '.')
+	for rel_component in `find . -type d -d 1 -regex './[^\.].*'`; do
+
+		# Get the absolute path to work with
+		component_path="$(pwd)/$(basename $rel_component)"
+		component_name=`basename $component_path`
+
+		_debug "Component path: $component_path"
+		_debug "Component name: $component_name"
+
+		# Skip components that don't have a Zestfile
+		if [[ ! -r $component_path/Zestfile ]]; then
+			_info "Skipping $component_name - no Zestfile"
+			continue
+		fi
+
+		# Run the tester inside compose
+		_info "Testing $component_name"
+
+		# TODO: Mount zest somehow and get it to run in compose
+		docker-compose run web
+
+
+	done
 }
 
 # Tester
