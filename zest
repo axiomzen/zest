@@ -6,7 +6,7 @@ DEBUG=false
 
 # Log an error message
 _error() {
-	echo $@
+	printf "\e[34;1m====> $@\e[0m\n"
 }
 
 # Log a fatal message and exit
@@ -17,13 +17,13 @@ _fatal() {
 
 # Informational message
 _info() {
-	echo $@
+	printf "\e[32;1m====> $@\e[0m\n"
 }
 
 # Verbose debugging message
 _debug() {
-	if [[ $DEBUG ]]; then
-		echo $@
+	if $DEBUG; then
+		printf "\e[33;1m====> $@\e[0m\n"
 	fi
 }
 
@@ -60,8 +60,12 @@ _build() {
 
 		_info "Building component $component_name in $from container"
 
-		# Build
+		# Build the binary
 		docker run --rm -v $component_path:/$component_name -w /$component_name -v $ZEST_PATH:/usr/bin/zest $from zest builder --name $component_name || exit 2
+
+		# Build the container
+		_info "Building $component_name container"
+		docker-compose build $component_name
 
 	done
 }
@@ -89,6 +93,37 @@ _builder() {
 	fi
 
 	build
+}
+
+# Test
+#
+# The test function is called on the host, launches the container with compose and runs the Zest tester inside it
+_test() {
+	echo "damn"
+}
+
+# Tester
+#
+# The portion of test that's run inside the container
+_tester() {
+
+	if [[ ! -r /$1/Zestfile ]]; then
+		_error "Zestfile not readable"
+		_error "/$1/Zestfile"
+		exit 1
+	fi
+
+	# Load the Zestfile
+	source /$1/Zestfile
+
+	# Run build
+	if [[ ! `type -t test` ]]; then
+		_error "Test not defined in Zestfile"
+		_error "Skipping build"
+		exit 0
+	fi
+
+	test
 }
 
 # Identify the zest binary
@@ -126,7 +161,7 @@ while [[ $# -ge 1 ]]; do
 			;;
 		-n|--name|name)
 			NAME=$2
-			_info "using name '$NAME'"
+			_debug "using name '$NAME'"
 			shift
 			;;
 		*)
@@ -147,8 +182,16 @@ case $COMMAND in
 		_builder $NAME
 		exit $?
 		;;
+	test)
+		_test
+		exit $?
+		;;
+	tester)
+		_tester $NAME
+		exit $?
+		;;
 	*)
-		_error "Unreconized command $COMMAND"
+		_error "Unreconized command '$COMMAND'"
 		exit 1
 		;;
 esac
