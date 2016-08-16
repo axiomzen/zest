@@ -2,12 +2,12 @@
 
 # Log an error message
 _error() {
-	printf "\e[34;1m====> $@\e[0m\n"
+	printf "\e[31;1m====> $@\e[0m\n"
 }
 
 # Log a fatal message and exit
 _fatal() {
-	_error $@
+	printf "\e[31;1m====> $@\e[0m\n"
 	exit 1
 }
 
@@ -23,198 +23,171 @@ _debug() {
 	fi
 }
 
-# Build
-#
-# This function is executed on the host, not the node
-# It launches the correct container for the node being created, mounts the source dir and zest executable
-# and then runs `zest builder` in the container
-_build() {
+# find the _zester script
+_zest_get_zester() {
 
-	_debug "Using zest from $ZEST_PATH"
+	# First look for _zester in the pwd
+	if [[ -x _zester ]]; then 
+		ZESTER_PATH=$(pwd)/_zester
+		return 0
+	fi
 
-	# For each component (folders in the current directory that don't start with a '.')
-	for rel_component in `find . -type d -d 1 -regex './[^\.].*'`; do
+	# Directory up
+	if [[ -x ../_zester ]]; then
+		ZESTER_PATH=$(pwd)/../_zester
+		return 0
+	fi
 
-		# Get the absolute path to work with
-		component_path="$(pwd)/$(basename $rel_component)"
-		component_name=`basename $component_path`
+	# then look for it in the $PATH
+	if which -s _zester; then
+		ZESTER_PATH=$(which _zester)
+		return 0
+	fi
 
-		_debug "Component path: $component_path"
-		_debug "Component name: $component_name"
-
-		# Skip components that don't have a Zestfile
-		if [[ ! -r $component_path/Zestfile ]]; then
-			_info "Skipping $component_name - no Zestfile"
-			continue
-		fi
-
-		# Error components that don't have a Dockerfile
-		if [[ ! -r $component_path/Dockerfile ]]; then
-			_error "$component_name has Zestfile but no Dockerfile"
-			continue
-		fi
-
-		# Get the container name out of the Dokcerfile
-		from=`sed -n -E 's/^FROM ([a-zA-Z]+(\:.+)?)$/\1/p' $component_path/Dockerfile`
-
-		# Build the binary
-		_info "Building component $component_name in $from container"
-		docker run --rm -v $component_path:/$component_name -w /$component_name -v $ZEST_PATH:/usr/bin/zest $from zest builder --name $component_name || exit 2
-
-		# Build the container
-		_info "Building $component_name container"
-		docker-compose build $component_name
-
-	done
+	# couldn't find it
+	return 1
 }
 
-# Builder
-#
-# This component of the build gets run inside the build container, and takes the name of the app as the argument.
-# It loads the Zestfile and runs the provided build() function
-_builder() {
+# Check we are a component
+_zest_is_component() {
 
-	if [[ ! -r /$1/Zestfile ]]; then
-		_error "Zestfile not readable"
-		_error "/$1/Zestfile"
-		exit 1
+	# Components must have a Zestfile and a Dockerfile
+	if [[ ! -r $1/Zestfile ]]; then
+		return 1
 	fi
 
-	# Load the Zestfile
-	source /$1/Zestfile
-
-	# Run build
-	if [[ ! `type -t build` ]]; then
-		_error "Build not defined in Zestfile"
-		_error "Skipping build"
-		exit 0
+	if [[ ! -r $1/Dockerfile ]]; then
+		return 1
 	fi
 
-	build
+	return 0
 }
 
-# Test
-#
-# The test function is called on the host, launches the container with compose and runs the Zest tester inside it
-_test() {
-	_debug "Using Zest from $ZEST_PATH"
+# Check we are a project
+_zest_is_project() {
 
-	# For each component (folders in the current directory that don't start with a '.')
-	for rel_component in `find . -type d -d 1 -regex './[^\.].*'`; do
+	# Projects must have a docker-compose.yml
+	if [[ ! -r $1/docker-compose.yml ]]; then
+		return 1
+	fi
 
-		# Get the absolute path to work with
-		component_path="$(pwd)/$(basename $rel_component)"
-		component_name=`basename $component_path`
-
-		_debug "Component path: $component_path"
-		_debug "Component name: $component_name"
-
-		# Skip components that don't have a Zestfile
-		if [[ ! -r $component_path/Zestfile ]]; then
-			_info "Skipping $component_name - no Zestfile"
-			continue
-		fi
-
-		# Run the tester inside compose
-		_info "Testing $component_name"
-
-		# TODO: Mount zest somehow and get it to run in compose
-		docker-compose run web
-
-
-	done
+	return 0
 }
 
-# Tester
-#
-# The portion of test that's run inside the container
-_tester() {
+_zest_build() {
 
-	if [[ ! -r /$1/Zestfile ]]; then
-		_error "Zestfile not readable"
-		_error "/$1/Zestfile"
-		exit 1
+	# Get the component name (folder name)
+	COMPONENT=$(basename `pwd`)
+	_debug "Using component name $COMPONENT"
+
+	# First ensure we're a component
+	_debug "Checking component"
+	if ! _zest_is_component . ; then
+		_fatal "$COMPONENT is not a component"
 	fi
 
-	# Load the Zestfile
-	source /$1/Zestfile
+	# load the Zestfile
+	_debug "Loading Zestfile"
+	source ./Zestfile
 
-	# Run build
-	if [[ ! `type -t test` ]]; then
-		_error "Test not defined in Zestfile"
-		_error "Skipping build"
-		exit 0
+	# Must have $BUILD_CONTAINER set
+	if [[ "$BUILD_CONTAINER" == "" ]]; then
+		_fatal "BUILD_CONTAINER not set in Zestfile"
 	fi
 
-	test
+	# Get the zester script
+	if ! _zest_get_zester; then
+		_fatal "Could not find zester"
+	fi
+	_debug "Found _zester at $ZESTER_PATH"
+
+	# Build in the container
+	_info "Building component $COMPONENT in $BUILD_CONTAINER"
+	docker run --rm -v $(pwd):/$COMPONENT -w /$COMPONENT -v $ZESTER_PATH:/usr/bin/zester $BUILD_CONTAINER zester build --name $COMPONENT || exit 2
 }
 
-# Identify the zest binary
-if [[ -r "$0" ]]
-then
-	if [[ $0 =~ ^. ]]; then
-		ZEST_PATH="$(pwd)/$0"
-	else
-		ZEST_PATH="$0"
-	fi
-else
-	ZEST_PATH=`which zest`
-fi
+_zest_bundle() {
+	_fatal "not implemented"
+}
 
-DEBUG=false
-HELP=false
+_zest_test() {
+	_fatal "not implemented"
+}
 
-COMMAND=$1
+_zest_version() {
+	_fatal "not implemented"
+}
+
+_zest_help() {
+	_fatal "not implemented"
+}
+
+########################
+# Main
+########################
+
+# Get master command
+case $1 in
+	build)
+		COMMAND="build"
+		;;
+	bundle)
+		COMMAND="bundle"
+		;;
+	test)
+		COMMAND="test"
+		;;
+	version)
+		COMMAND="version"
+		;;
+	help)
+		COMMAND="help"
+		;;
+	*)
+		COMMAND="unknown"
+		;;
+esac
+
+# discard command
 shift
 
-NAME=""
+# Usage if nessesary
+if [[ "$COMMAND" == "help" ]]; then
+	_zest_help
+	exit 0
+fi
 
-# Parse command line args
-while [[ $# -ge 1 ]]; do
+if [[ "$COMMAND" == "unknown" ]]; then
+	_zest_help
+	exit 1
+fi
+
+# Get other arguments
+DEBUG=false
+
+while [[ $# -gt 0 ]]; do
 	case $1 in
-		-d|--debug)
+		-d|--debug|-v|--verbose)
 			DEBUG=true
-			_debug "Enabling debug"
-			;;
-		-h|--help|help)
-			_info "Zest - Zen Tests with a twist"
-			_info ""
-			_info "There is no help though, sorry"
-			exit 0
-			;;
-		-n|--name|name)
-			NAME=$2
-			_debug "using name '$NAME'"
-			shift
-			;;
-		*)
-			_error "Command not supported"
-			exit 2
 			;;
 	esac
 	shift
 done
 
-# Run command
+# Run main command
 case $COMMAND in
 	build)
-		_build
-		exit $?
+		_zest_build
 		;;
-	builder)
-		_builder $NAME
-		exit $?
+	bundle)
+		_zest_bundle
 		;;
 	test)
-		_test
-		exit $?
+		_zest_test
 		;;
-	tester)
-		_tester $NAME
-		exit $?
-		;;
-	*)
-		_error "Unreconized command '$COMMAND'"
-		exit 1
+	version)
+		_info $(_zest_version)
 		;;
 esac
+
+exit $?
