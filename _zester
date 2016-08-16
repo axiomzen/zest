@@ -1,3 +1,57 @@
 #!/bin/bash
 
-echo "I am the zester"
+# Log an error message
+_error() {
+	printf "\e[31;1m====> $@\e[0m\n"
+}
+
+# Log a fatal message and exit
+_fatal() {
+	printf "\e[31;1m====> $@\e[0m\n"
+	exit 1
+}
+
+# Informational message
+_info() {
+	printf "\e[32;1m====> $@\e[0m\n"
+}
+
+# Verbose debugging message
+_debug() {
+	if $DEBUG; then
+		printf "\e[33;1m====> $@\e[0m\n"
+	fi
+}
+
+# Set debugging
+if [[ "$2" == "-v" ]]; then
+	DEBUG=true
+else
+	DEBUG=false
+fi
+
+_debug "Starting Zester"
+
+# Ensure Zestfile is present
+if [[ ! -r Zestfile ]]; then
+	_fatal "Zestfile failed to mount correctly"
+fi
+
+# Source the Zestfile
+source Zestfile
+
+if [[ "$1" == "build" ]]; then
+	_debug "Running build"
+
+	set -e
+	Build
+	set +e
+fi
+
+if [[ "$1" == "test" ]]; then
+	_debug "Running test"
+
+	set -e
+	Test
+	set +e
+fi

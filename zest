@@ -103,7 +103,13 @@ _zest_build() {
 
 	# Build in the container
 	_info "Building component $COMPONENT in $BUILD_CONTAINER"
-	docker run --rm -v $(pwd):/$COMPONENT -w /$COMPONENT -v $ZESTER_PATH:/usr/bin/zester $BUILD_CONTAINER zester build --name $COMPONENT || exit 2
+	docker run --rm -v $(pwd):/$COMPONENT -w /$COMPONENT -v $ZESTER_PATH:/usr/bin/zester $BUILD_CONTAINER zester build --name $COMPONENT
+
+	if [[ $? -ne 0 ]]; then
+		_fatal "Build failed"
+	fi
+
+	_info "Build success!"
 }
 
 _zest_bundle() {
