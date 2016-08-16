@@ -141,9 +141,22 @@ _zest_bundle() {
 		VERSION=latest
 	fi
 
+	# Get the project name
+	if [[ -z ${PROJECT+x} ]]; then
+		PROJECT=$(cd ..; basename $PWD)
+		_debug "PROJECT not set, using $PROJECT"
+	fi
+
 	# Build the image
-	_info "Bundling image $COMPONENT:$VERSION"
-	docker build -t $COMPONENT:$VERSION -t $COMPONENT:latest .
+	_info "Bundling image $PROJECT/$COMPONENT:$VERSION"
+
+	if [[ "$IMAGE_REPO" == "" ]]; then
+		_debug "Not using repo"
+		docker build -t $PROJECT/$COMPONENT:$VERSION -t $PROJECT/$COMPONENT:latest .
+	else
+		_debug "Using repo $IMAGE_REPO"
+		docker build -t $IMAGE_REPO/$PROJECT/$COMPONENT:$VERSION -t $IMAGE_REPO/$PROJECT/$COMPONENT:latest .
+	fi
 
 	if [[ $? -ne 0 ]]; then
 		_fatal "Bundle failed"
@@ -153,7 +166,44 @@ _zest_bundle() {
 }
 
 _zest_test() {
-	_fatal "Not yet implemented"
+
+	# Get the component name (folder name)
+	COMPONENT=$(basename `pwd`)
+	_debug "Using component name $COMPONENT"
+
+	# First ensure we're a component
+	_debug "Checking component"
+	if ! _zest_is_component . ; then
+		_fatal "$COMPONENT is not a component"
+	fi
+
+	# load the Zestfile
+	_debug "Loading Zestfile"
+	source ./Zestfile
+
+	# Must have $TEST_CONTAINER or $BUILD_CONTAINER set
+	if [[ "$TEST_CONTAINER" == "" ]]; then
+		TEST_CONTAINER=$BUILD_CONTAINER
+	fi
+	if [[ "$TEST_CONTAINER" == "" ]]; then
+		_fatal "Neither TEST_CONTAINER nor BUILD_CONTAINER set in Zestfile"
+	fi
+
+	# Get the zester script
+	if ! _zest_get_zester; then
+		_fatal "Could not find zester"
+	fi
+	_debug "Found _zester at $ZESTER_PATH"
+
+	# Build in the container
+	_info "Testing component $COMPONENT in $BUILD_CONTAINER"
+	docker run --rm -v $(pwd):/$COMPONENT -w /$COMPONENT -v $ZESTER_PATH:/usr/bin/zester $BUILD_CONTAINER zester test --name $COMPONENT
+
+	if [[ $? -ne 0 ]]; then
+		_fatal "Build failed"
+	fi
+
+	_info "Build success!"
 }
 
 _zest_version() {
