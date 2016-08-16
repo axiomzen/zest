@@ -27,7 +27,7 @@ _debug() {
 _zest_get_zester() {
 
 	# First look for _zester in the pwd
-	if [[ -x _zester ]]; then 
+	if [[ -x _zester ]]; then
 		ZESTER_PATH=$(pwd)/_zester
 		return 0
 	fi
@@ -113,15 +113,72 @@ _zest_build() {
 }
 
 _zest_bundle() {
-	_fatal "not implemented"
+
+	# Get the component name (folder name)
+	COMPONENT=$(basename `pwd`)
+	_debug "Using component name $COMPONENT"
+
+	# First ensure we're a component
+	_debug "Checking component"
+	if ! _zest_is_component . ; then
+		_fatal "$COMPONENT is not a component"
+	fi
+
+	# load the Zestfile
+	_debug "Loading Zestfile"
+	source ./Zestfile
+
+	# Get the version tag override
+	VERSION_OVERRIDE=$(Version)
+	if [[ ! "$VERSION_OVERRIDE" == "" ]]; then
+		VERSION=$VERSION_OVERRIDE
+	fi
+
+	# Check some version is set
+	if [[ "$VERSION" == "" ]]; then
+		_error "Version not set"
+		_error "Using 'latest'"
+		VERSION=latest
+	fi
+
+	# Build the image
+	_info "Bundling image $COMPONENT:$VERSION"
+	docker build -t $COMPONENT:$VERSION -t $COMPONENT:latest .
+
+	if [[ $? -ne 0 ]]; then
+		_fatal "Bundle failed"
+	fi
+
+	_info "Bundle success!"
 }
 
 _zest_test() {
-	_fatal "not implemented"
+	_fatal "Not yet implemented"
 }
 
 _zest_version() {
-	_fatal "not implemented"
+
+	# Get the component name (folder name)
+	COMPONENT=$(basename `pwd`)
+	_debug "Using component name $COMPONENT"
+
+	# First ensure we're a component
+	_debug "Checking component"
+	if ! _zest_is_component . ; then
+		_fatal "$COMPONENT is not a component"
+	fi
+
+	# load the Zestfile
+	_debug "Loading Zestfile"
+	source ./Zestfile
+
+	# Get the version tag override
+	VERSION_OVERRIDE=$(Version)
+	if [[ ! "$VERSION_OVERRIDE" == "" ]]; then
+		VERSION=$VERSION_OVERRIDE
+	fi
+
+	echo "$VERSION"
 }
 
 _zest_help() {
@@ -192,7 +249,7 @@ case $COMMAND in
 		_zest_test
 		;;
 	version)
-		_info $(_zest_version)
+		_zest_version
 		;;
 esac
 
