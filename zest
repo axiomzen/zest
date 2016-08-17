@@ -231,6 +231,32 @@ _zest_version() {
 	echo "$VERSION"
 }
 
+_zest_enter() {
+
+	# Get the component name (folder name)
+	COMPONENT=$(basename `pwd`)
+	_debug "Using component name $COMPONENT"
+
+	# First ensure we're a component
+	_debug "Checking component"
+	if ! _zest_is_component . ; then
+		_fatal "$COMPONENT is not a component"
+	fi
+
+	# load the Zestfile
+	_debug "Loading Zestfile"
+	source ./Zestfile
+
+	if [[ "$BUILD_CONTAINER" == "" ]]; then
+		_fatal "BUILD_CONTAINER not set"
+	fi
+
+	_info "Entering $BUILD_CONTAINER for developemnt"
+	docker run -v $(pwd):/$COMPONENT -w /$COMPONENT -ti $BUILD_CONTAINER bash -i
+
+	_info "Leaving dev container"
+}
+
 _zest_help() {
 	_fatal "not implemented"
 }
@@ -255,6 +281,9 @@ case $1 in
 		;;
 	help)
 		COMMAND="help"
+		;;
+	enter)
+		COMMAND="enter"
 		;;
 	*)
 		COMMAND="unknown"
@@ -300,6 +329,9 @@ case $COMMAND in
 		;;
 	version)
 		_zest_version
+		;;
+	enter)
+		_zest_enter
 		;;
 esac
 

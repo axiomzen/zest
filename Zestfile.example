@@ -17,6 +17,10 @@ TEST_CONTAINER=
 # PROJECT
 # The name of the project repo that the resulting image from a bundle will be tagged as
 # Defaults to the parent directory name (../)
+PROJECT=
+
+# IMAGE_REPO
+# The remote server to send the docker images to
 IMAGE_REPO=
 
 # VERSION
