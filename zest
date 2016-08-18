@@ -228,6 +228,11 @@ _zest_version() {
 		VERSION=$VERSION_OVERRIDE
 	fi
 
+	if [[ "$VERSION" == "" && $DEFAULT_VERSION == true ]]; then
+		_debug "using default version"
+		VERSION=0.0.0-unversioned
+	fi
+
 	echo "$VERSION"
 }
 
@@ -325,11 +330,15 @@ fi
 
 # Get other arguments
 DEBUG=false
+DEFAULT_VERSION=true
 
 while [[ $# -gt 0 ]]; do
 	case $1 in
 		-d|--debug|-v|--verbose)
 			DEBUG=true
+			;;
+		-nv|--no-default-version)
+			DEFAULT_VERSION=false
 			;;
 	esac
 	shift
