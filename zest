@@ -142,20 +142,20 @@ _zest_bundle() {
 	fi
 
 	# Get the project name
-	if [[ "$PROJECT" == "" ]]; then
-		PROJECT=$(cd ..; basename $PWD)
-		_debug "PROJECT not set, using $PROJECT"
+	if [[ "$REPO" == "" ]]; then
+		REPO=$(cd ..; basename $PWD)
+		_debug "REPO not set, using $REPO"
 	fi
 
 	# Build the image
-	_info "Bundling image $PROJECT/$COMPONENT:$VERSION"
+	_info "Bundling image $REPO/$COMPONENT:$VERSION"
 
-	if [[ "$IMAGE_REPO" == "" ]]; then
-		_debug "Not using repo"
-		docker build -t $PROJECT/$COMPONENT:$VERSION -t $PROJECT/$COMPONENT:latest .
+	if [[ "$IMAGE_SERVER" == "" ]]; then
+		_debug "Not using image server"
+		docker build -t $REPO/$COMPONENT:$VERSION -t $REPO/$COMPONENT:latest .
 	else
-		_debug "Using repo $IMAGE_REPO"
-		docker build -t $IMAGE_REPO/$PROJECT/$COMPONENT:$VERSION -t $IMAGE_REPO/$PROJECT/$COMPONENT:latest .
+		_debug "Using image server $IMAGE_SERVER"
+		docker build -t $IMAGE_SERVER/$REPO/$COMPONENT:$VERSION -t $IMAGE_SERVER/$REPO/$COMPONENT:latest .
 	fi
 
 	if [[ $? -ne 0 ]]; then

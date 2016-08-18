@@ -14,14 +14,14 @@ BUILD_CONTAINER=
 # In [repo/]image[:tag] format
 TEST_CONTAINER=
 
-# PROJECT
+# REPO
 # The name of the project repo that the resulting image from a bundle will be tagged as
 # Defaults to the parent directory name (../)
-PROJECT=
+REPO=
 
-# IMAGE_REPO
+# IMAGE_SERVER
 # The remote server to send the docker images to
-IMAGE_REPO=
+IMAGE_SERVER=
 
 # VERSION
 # For statically versioned projets, this can be any string
