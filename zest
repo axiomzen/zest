@@ -142,7 +142,7 @@ _zest_bundle() {
 	fi
 
 	# Get the project name
-	if [[ -z ${PROJECT+x} ]]; then
+	if [[ "$PROJECT" == "" ]]; then
 		PROJECT=$(cd ..; basename $PWD)
 		_debug "PROJECT not set, using $PROJECT"
 	fi
@@ -231,6 +231,22 @@ _zest_version() {
 	echo "$VERSION"
 }
 
+_zest_init() {
+
+	if [[ ! -f Zestfile ]]; then
+		_info "Adding default Zestfile"
+		cp /usr/local/share/zest/Zestfile.example Zestfile
+	fi
+
+	if [[ ! -f Dockerfile ]]; then
+		_info "Creating empty Dockerfile"
+		touch Dockerfile
+	fi
+
+	_info "$(basename $PWD) is now a component"
+
+}
+
 _zest_enter() {
 
 	# Get the component name (folder name)
@@ -285,6 +301,9 @@ case $1 in
 	enter)
 		COMMAND="enter"
 		;;
+	init)
+		COMMAND="init"
+		;;
 	*)
 		COMMAND="unknown"
 		;;
@@ -332,6 +351,9 @@ case $COMMAND in
 		;;
 	enter)
 		_zest_enter
+		;;
+	init)
+		_zest_init
 		;;
 esac
 
