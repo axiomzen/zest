@@ -1,0 +1,7 @@
+version: "2"
+services:
+  example:
+    image: "test/example:latest"
+  integrater:
+    image: "ubuntu:14.04"
+    command: 'curl example:8080 | grep "Hello world"'
