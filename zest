@@ -240,7 +240,7 @@ _zest_version() {
 	echo "$VERSION"
 }
 
-_zest_init() {
+_zest_init_service() {
 
 	if [[ ! -f Zestfile ]]; then
 		_info "Adding default Zestfile"
@@ -254,6 +254,22 @@ _zest_init() {
 
 	_info "$(basename $PWD) is now a component"
 
+}
+
+_zest_init_project() {
+
+	if [[ ! -f docker-compose.yml ]]; then
+		_info "Adding docker-compose"
+		echo 'version: "2"' >> docker-compose.yml
+		echo 'services:' >> docker-compose.yml
+
+		#TODO search for each service?
+	fi
+
+	if [[ ! -f Peelfile ]]; then
+		_info "Adding Peelfile"
+		touch Peelfile
+	fi
 }
 
 _zest_enter() {
@@ -299,7 +315,7 @@ _zest_integrate() {
 
 	# Run compose
 	_debug "running compose"
-	docker-compose up -d $INTEGRATE_SERVICE
+	docker-compose up $INTEGRATE_SERVICE
 
 	# Integrate finished
 	# Capture return value
@@ -346,8 +362,11 @@ case $1 in
 	enter)
 		COMMAND="enter"
 		;;
-	init)
-		COMMAND="init"
+	init|init-service)
+		COMMAND="init-service"
+		;;
+	init-project)
+		COMMAND="init-project"
 		;;
 	integrate)
 		COMMAND="integrate"
@@ -404,8 +423,11 @@ case $COMMAND in
 	enter)
 		_zest_enter
 		;;
-	init)
-		_zest_init
+	init-service)
+		_zest_init_service
+		;;
+	init-project)
+		_zest_init_project
 		;;
 	integrate)
 		_zest_integrate
