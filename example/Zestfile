@@ -1,0 +1,60 @@
+#!/bin/bash
+# Zestfile
+#
+# This file contains all the definitions and scripts needed to build
+# and test each component of your project.
+
+# BUILD_CONTAINER (required for build command)
+# Specify a container to build your application in
+# In [repo/]image[:tag] format
+BUILD_CONTAINER=golang:1.6
+
+# TEST_CONTAINER (required if BUILD_CONTAINER not specified)
+# The container to put your application in to launch tests
+# In [repo/]image[:tag] format
+TEST_CONTAINER=
+
+# REPO
+# The name of the project repo that the resulting image from a bundle will be tagged as
+# Defaults to the parent directory name (../)
+REPO=test
+
+# IMAGE_SERVER
+# The remote server to send the docker images to
+IMAGE_SERVER=
+
+# VERSION
+# For statically versioned projets, this can be any string
+# This setting will be overridden by any output from Version() below
+VERSION=0.1.0
+
+# Build()
+# The script to be executed inside BUILD_CONTAINER in the project directory
+# to build any assets or binaries
+Build() {
+	# ex:
+	# go build
+	# rake
+	# bundle
+	# npm install
+	go build
+}
+
+# Test()
+# The script to be executed inside TEST_CONTAINER in the projecte directory
+# to perform any unit tests for the application
+Test() {
+	# ex:
+	# go test
+	# npm test
+	go test
+}
+
+# Version()
+# For more dynamic versioning, this function will override the VERSION config
+# Use this to generate a version number uniquely for each commit or build
+Version() {
+	# ex:
+	# git describe --tags
+	git describe --tag 2> /dev/null
+}
