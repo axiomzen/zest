@@ -78,6 +78,38 @@ _zest_is_project() {
 	return 0
 }
 
+_zest_run() {
+
+	# Check project
+	_debug "checking project"
+	if ! _zest_is_project . ; then
+		_fatal "Not a project"
+	fi
+
+	RUN_SERVICE=`grep -E -i "^run: [a-zA-Z\-]+$" Peelfile | grep -o -E "[a-zA-Z\-]+$"`
+
+	if [[ "$RUN_SERVICE" == "" ]]; then
+		_fatal "run: not specified in Peelfile"
+	fi
+
+	_info "Running service $RUN_SERVICE"
+
+	docker-compose up -d $RUN_SERVICE
+}
+
+_zest_stop() {
+
+	# Check project
+	_debug "checking project"
+	if ! _zest_is_project . ; then
+		_fatal "Not a project"
+	fi
+
+	_info "Stopping project"
+
+	docker-compose down
+}
+
 _zest_build() {
 
 	# Get the component name (folder name)
@@ -371,6 +403,12 @@ case $1 in
 	integrate)
 		COMMAND="integrate"
 		;;
+	run)
+		COMMAND="run"
+		;;
+	stop)
+		COMMAND="stop"
+		;;
 	*)
 		COMMAND="unknown"
 		;;
@@ -431,6 +469,12 @@ case $COMMAND in
 		;;
 	integrate)
 		_zest_integrate
+		;;
+	run)
+		_zest_run
+		;;
+	stop)
+		_zest_stop
 		;;
 esac
 

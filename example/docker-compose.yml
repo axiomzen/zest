@@ -5,3 +5,5 @@ services:
   integrater:
     image: "ubuntu:14.04"
     command: 'curl example:8080 | grep "Hello world"'
+    depends_on:
+      - example
