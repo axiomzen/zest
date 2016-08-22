@@ -66,8 +66,12 @@ _zest_is_component() {
 # Check we are a project
 _zest_is_project() {
 
-	# Projects must have a docker-compose.yml
+	# Projects must have a docker-compose.yml and a Peelfile
 	if [[ ! -r $1/docker-compose.yml ]]; then
+		return 1
+	fi
+
+	if [[ ! -r $1/Peelfile ]]; then
 		return 1
 	fi
 
@@ -278,6 +282,42 @@ _zest_enter() {
 	_info "Leaving dev container"
 }
 
+_zest_integrate() {
+
+	# Make sure we're a project
+	if ! _zest_is_project . ; then
+		_fatal "Not a project."
+	fi
+
+	# Get the integrate project
+	_debug "Getting integrate service from Peelfile"
+	INTEGRATE_SERVICE=`grep -E -i "^integrate: [a-zA-Z\-]+$" Peelfile | grep -o -E "[a-zA-Z\-]+$"`
+
+	if [[ "$INTEGRATE_SERVICE" == "" ]]; then
+		_fatal "integrate not speficied in Peelfile"
+	fi
+
+	# Run compose
+	_debug "running compose"
+	docker-compose up -d $INTEGRATE_SERVICE
+
+	# Integrate finished
+	# Capture return value
+	INTEGRATE_EXIT_CODE=$?
+	_debug "Compose exited with status $INTEGRATE_EXIT_CODE"
+
+	# Clean up
+	_debug "Cleaning up"
+	docker-compose down
+
+	if [[ -z $INTEGRATE_EXIT_CODE ]]; then
+		_info "Integration tests passed"
+	else
+		_error "Integration tests failed"
+		exit $INTEGRATE_EXIT_CODE
+	fi
+}
+
 _zest_help() {
 	_fatal "not implemented"
 }
@@ -308,6 +348,9 @@ case $1 in
 		;;
 	init)
 		COMMAND="init"
+		;;
+	integrate)
+		COMMAND="integrate"
 		;;
 	*)
 		COMMAND="unknown"
@@ -363,6 +406,9 @@ case $COMMAND in
 		;;
 	init)
 		_zest_init
+		;;
+	integrate)
+		_zest_integrate
 		;;
 esac
 
