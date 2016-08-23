@@ -38,6 +38,12 @@ _zest_get_zester() {
 		return 0
 	fi
 
+	# Home directory
+	if [[ -x $HOME/.zest/_zester ]]; then
+		ZESTER_PATH=$HOME/.zest/_zester
+		return 0
+	fi
+
 	# then look for it in the $PATH
 	if which -s _zester; then
 		ZESTER_PATH=$(which _zester)
