@@ -145,7 +145,7 @@ _zest_build() {
 
 	# Build in the container
 	_info "Building component $COMPONENT in $BUILD_CONTAINER"
-	docker run --rm -v $(pwd):$BUILD_MOUNT_DIR/$COMPONENT -w $BUILD_MOUNT_DIR/$COMPONENT -v $ZESTER_PATH:/usr/bin/zester $BUILD_CONTAINER zester build --name $COMPONENT
+	docker run --rm -v $(pwd):$MOUNT_DIR/$COMPONENT -w $MOUNT_DIR/$COMPONENT -v $ZESTER_PATH:/usr/bin/zester $BUILD_CONTAINER zester build --name $COMPONENT
 
 	if [[ $? -ne 0 ]]; then
 		_fatal "Build failed"
@@ -239,7 +239,7 @@ _zest_test() {
 
 	# Build in the container
 	_info "Testing component $COMPONENT in $BUILD_CONTAINER"
-	docker run --rm -v $(pwd):/$COMPONENT -w /$COMPONENT -v $ZESTER_PATH:/usr/bin/zester $BUILD_CONTAINER zester test --name $COMPONENT
+	docker run --rm -v $(pwd):$MOUNT_DIR/$COMPONENT -w $MOUNT_DIR/$COMPONENT -v $ZESTER_PATH:/usr/bin/zester $BUILD_CONTAINER zester test --name $COMPONENT
 
 	if [[ $? -ne 0 ]]; then
 		_fatal "Build failed"
