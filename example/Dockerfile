@@ -1,7 +1,7 @@
-FROM ubuntu:14.04
+FROM scratch
 
-CMD ["/web"]
+CMD ["/example"]
 EXPOSE 2222
 
 # Always add the binary last to maximize caching
-ADD web /web
+ADD example /example

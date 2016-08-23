@@ -37,7 +37,7 @@ Build() {
 	# rake
 	# bundle
 	# npm install
-	go build
+	CGO_ENABLED=0 go build -a
 }
 
 # Test()
