@@ -30,7 +30,8 @@ VERSION=
 
 # MOUNT_DIR
 # Specifies where the project code will be mounted in the BUILD_CONTAINER
-# Will be mounted at $BUILD_MOUNT_DIR/<service-name>
+# and TEST_CONTAINER, for building and testing respectively
+# Will be mounted at $MOUNT_DIR/<service-name>
 MOUNT_DIR=
 
 # Build()

@@ -28,6 +28,11 @@ IMAGE_SERVER=
 # This setting will be overridden by any output from Version() below
 VERSION=0.1.0
 
+# MOUNT_DIR
+# Specifies where the project code will be mounted in the BUILD_CONTAINER
+# Will be mounted at $BUILD_MOUNT_DIR/<service-name>
+MOUNT_DIR=
+
 # Build()
 # The script to be executed inside BUILD_CONTAINER in the project directory
 # to build any assets or binaries
