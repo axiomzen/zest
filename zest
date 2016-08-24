@@ -352,8 +352,13 @@ _zest_integrate() {
 	fi
 
 	# Run compose
-	_debug "running compose"
-	docker-compose up $INTEGRATE_SERVICE
+	if [[ -r "docker-compose.integrate.yml" ]]; then
+		_debug "running compose with integrate overrides"
+		docker-compose -f docker-compose.yml -f docker-compose.integrate.yml up $INTEGRATE_SERVICE
+	else
+		_debug "running compose"
+		docker-compose up $INTEGRATE_SERVICE
+	fi
 
 	# Integrate finished
 	# Capture return value
