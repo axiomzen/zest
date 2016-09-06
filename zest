@@ -363,13 +363,14 @@ _zest_integrate() {
 	# Integrate finished
 	# Capture return value
 	INTEGRATE_EXIT_CODE=$?
+
 	_debug "Compose exited with status $INTEGRATE_EXIT_CODE"
 
 	# Clean up
 	_debug "Cleaning up"
 	docker-compose down
 
-	if [[ -z $INTEGRATE_EXIT_CODE ]]; then
+	if [[ $INTEGRATE_EXIT_CODE -eq 0 ]]; then
 		_info "Integration tests passed"
 	else
 		_error "Integration tests failed"
