@@ -377,6 +377,31 @@ _zest_integrate() {
 	fi
 }
 
+_zest_all() {
+
+	_info "Running zest on all possible sub services"
+
+	# Check to see if the root directory itself is a service
+	if _zest_is_component . ; then
+		_info "Zesting root directory"
+		bash -c 'zest build && zest test && zest bundle' || _fatal "Zest all failed"
+	fi
+
+	# Look for services in folders down
+	for dir in `find . -type d -d 1`; do
+		_debug "Testing $dir"
+		if _zest_is_component $dir; then
+			_info "Zesting $dir"
+			bash -c "cd $dir; zest build && zest test && zest bundle" || _fatal "Zest all failed"
+		fi
+	done
+
+	# Run integration tests
+	zest integrate || _fatal "Zest all failed"
+
+	_info "Zest all completed succesfully"
+}
+
 _zest_help() {
 	_fatal "not implemented"
 }
@@ -419,6 +444,9 @@ case $1 in
 		;;
 	stop)
 		COMMAND="stop"
+		;;
+	all)
+		COMMAND="all"
 		;;
 	*)
 		COMMAND="unknown"
@@ -486,6 +514,9 @@ case $COMMAND in
 		;;
 	stop)
 		_zest_stop
+		;;
+	all)
+		_zest_all
 		;;
 esac
 
