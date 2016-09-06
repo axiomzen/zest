@@ -242,10 +242,10 @@ _zest_test() {
 	docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester $BUILD_CONTAINER zester test --name $SERVICE
 
 	if [[ $? -ne 0 ]]; then
-		_fatal "Build failed"
+		_fatal "Test failed"
 	fi
 
-	_info "Build success!"
+	_info "Test success!"
 }
 
 _zest_version() {
