@@ -380,6 +380,11 @@ _zest_integrate() {
 
 _zest_all() {
 
+	_debug "Checking project"
+	if ! _zest_is_project . ; then
+		_fatal "This directory is not a project"
+	fi
+
 	_info "Running zest on all possible sub services"
 
 	# Check to see if the root directory itself is a service
