@@ -2,9 +2,8 @@
 This is an example golang webapp. It is versioned by either git tags, or just as 0.1.0
 
 ## Zesting
-To run this project with the zest workflow, use the following commands
+This project can be built, run, and tested with the individual zest commands or simply by running
 ```
-$ ../zest build
-$ ../zest test
-$ ../zest bundle
-$ docker run -p 2222:2222 -d test/example:latest
+zest all
+```
+to perform the entire build/test/bundle/integrate workflow in a single command.

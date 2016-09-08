@@ -54,8 +54,8 @@ _zest_get_zester() {
 	return 1
 }
 
-# Check we are a component
-_zest_is_component() {
+# Check we are a service
+_zest_is_service() {
 
 	# Components must have a Zestfile and a Dockerfile
 	if [[ ! -r $1/Zestfile ]]; then
@@ -118,14 +118,14 @@ _zest_stop() {
 
 _zest_build() {
 
-	# Get the component name (folder name)
-	COMPONENT=$(basename `pwd`)
-	_debug "Using component name $COMPONENT"
+	# Get the service name (folder name)
+	SERVICE=$(basename `pwd`)
+	_debug "Using service name $SERVICE"
 
-	# First ensure we're a component
-	_debug "Checking component"
-	if ! _zest_is_component . ; then
-		_fatal "$COMPONENT is not a component"
+	# First ensure we're a service
+	_debug "Checking service"
+	if ! _zest_is_service . ; then
+		_fatal "$SERVICE is not a service"
 	fi
 
 	# load the Zestfile
@@ -144,8 +144,8 @@ _zest_build() {
 	_debug "Found _zester at $ZESTER_PATH"
 
 	# Build in the container
-	_info "Building component $COMPONENT in $BUILD_CONTAINER"
-	docker run --rm -v $(pwd):$MOUNT_DIR/$COMPONENT -w $MOUNT_DIR/$COMPONENT -v $ZESTER_PATH:/usr/bin/zester $BUILD_CONTAINER zester build --name $COMPONENT
+	_info "Building service $SERVICE in $BUILD_CONTAINER"
+	docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester $BUILD_CONTAINER zester build --name $SERVICE
 
 	if [[ $? -ne 0 ]]; then
 		_fatal "Build failed"
@@ -156,14 +156,14 @@ _zest_build() {
 
 _zest_bundle() {
 
-	# Get the component name (folder name)
-	COMPONENT=$(basename `pwd`)
-	_debug "Using component name $COMPONENT"
+	# Get the service name (folder name)
+	SERVICE=$(basename `pwd`)
+	_debug "Using service name $SERVICE"
 
-	# First ensure we're a component
-	_debug "Checking component"
-	if ! _zest_is_component . ; then
-		_fatal "$COMPONENT is not a component"
+	# First ensure we're a service
+	_debug "Checking service"
+	if ! _zest_is_service . ; then
+		_fatal "$SERVICE is not a service"
 	fi
 
 	# load the Zestfile
@@ -190,14 +190,14 @@ _zest_bundle() {
 	fi
 
 	# Build the image
-	_info "Bundling image $REPO/$COMPONENT:$VERSION"
+	_info "Bundling image $REPO/$SERVICE:$VERSION"
 
 	if [[ "$IMAGE_SERVER" == "" ]]; then
 		_debug "Not using image server"
-		docker build -t $REPO/$COMPONENT:$VERSION -t $REPO/$COMPONENT:latest .
+		docker build -t $REPO/$SERVICE:$VERSION -t $REPO/$SERVICE:latest .
 	else
 		_debug "Using image server $IMAGE_SERVER"
-		docker build -t $IMAGE_SERVER/$REPO/$COMPONENT:$VERSION -t $IMAGE_SERVER/$REPO/$COMPONENT:latest .
+		docker build -t $IMAGE_SERVER/$REPO/$SERVICE:$VERSION -t $IMAGE_SERVER/$REPO/$SERVICE:latest .
 	fi
 
 	if [[ $? -ne 0 ]]; then
@@ -209,14 +209,14 @@ _zest_bundle() {
 
 _zest_test() {
 
-	# Get the component name (folder name)
-	COMPONENT=$(basename `pwd`)
-	_debug "Using component name $COMPONENT"
+	# Get the service name (folder name)
+	SERVICE=$(basename `pwd`)
+	_debug "Using service name $SERVICE"
 
-	# First ensure we're a component
-	_debug "Checking component"
-	if ! _zest_is_component . ; then
-		_fatal "$COMPONENT is not a component"
+	# First ensure we're a service
+	_debug "Checking service"
+	if ! _zest_is_service . ; then
+		_fatal "$SERVICE is not a service"
 	fi
 
 	# load the Zestfile
@@ -238,26 +238,26 @@ _zest_test() {
 	_debug "Found _zester at $ZESTER_PATH"
 
 	# Build in the container
-	_info "Testing component $COMPONENT in $BUILD_CONTAINER"
-	docker run --rm -v $(pwd):$MOUNT_DIR/$COMPONENT -w $MOUNT_DIR/$COMPONENT -v $ZESTER_PATH:/usr/bin/zester $BUILD_CONTAINER zester test --name $COMPONENT
+	_info "Testing service $SERVICE in $BUILD_CONTAINER"
+	docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester $BUILD_CONTAINER zester test --name $SERVICE
 
 	if [[ $? -ne 0 ]]; then
-		_fatal "Build failed"
+		_fatal "Test failed"
 	fi
 
-	_info "Build success!"
+	_info "Test success!"
 }
 
 _zest_version() {
 
-	# Get the component name (folder name)
-	COMPONENT=$(basename `pwd`)
-	_debug "Using component name $COMPONENT"
+	# Get the service name (folder name)
+	SERVICE=$(basename `pwd`)
+	_debug "Using service name $SERVICE"
 
-	# First ensure we're a component
-	_debug "Checking component"
-	if ! _zest_is_component . ; then
-		_fatal "$COMPONENT is not a component"
+	# First ensure we're a service
+	_debug "Checking service"
+	if ! _zest_is_service . ; then
+		_fatal "$SERVICE is not a service"
 	fi
 
 	# load the Zestfile
@@ -290,7 +290,7 @@ _zest_init_service() {
 		touch Dockerfile
 	fi
 
-	_info "$(basename $PWD) is now a component"
+	_info "$(basename $PWD) is now a service"
 
 }
 
@@ -312,14 +312,14 @@ _zest_init_project() {
 
 _zest_enter() {
 
-	# Get the component name (folder name)
-	COMPONENT=$(basename `pwd`)
-	_debug "Using component name $COMPONENT"
+	# Get the service name (folder name)
+	SERVICE=$(basename `pwd`)
+	_debug "Using service name $SERVICE"
 
-	# First ensure we're a component
-	_debug "Checking component"
-	if ! _zest_is_component . ; then
-		_fatal "$COMPONENT is not a component"
+	# First ensure we're a service
+	_debug "Checking service"
+	if ! _zest_is_service . ; then
+		_fatal "$SERVICE is not a service"
 	fi
 
 	# load the Zestfile
@@ -331,7 +331,7 @@ _zest_enter() {
 	fi
 
 	_info "Entering $BUILD_CONTAINER for developemnt"
-	docker run -v $(pwd):/$COMPONENT -w /$COMPONENT -ti $BUILD_CONTAINER bash -i
+	docker run -v $(pwd):/$SERVICE -w /$SERVICE -ti $BUILD_CONTAINER bash -i
 
 	_info "Leaving dev container"
 }
@@ -363,18 +363,49 @@ _zest_integrate() {
 	# Integrate finished
 	# Capture return value
 	INTEGRATE_EXIT_CODE=$?
+
 	_debug "Compose exited with status $INTEGRATE_EXIT_CODE"
 
 	# Clean up
 	_debug "Cleaning up"
 	docker-compose down
 
-	if [[ -z $INTEGRATE_EXIT_CODE ]]; then
+	if [[ $INTEGRATE_EXIT_CODE -eq 0 ]]; then
 		_info "Integration tests passed"
 	else
 		_error "Integration tests failed"
 		exit $INTEGRATE_EXIT_CODE
 	fi
+}
+
+_zest_all() {
+
+	_debug "Checking project"
+	if ! _zest_is_project . ; then
+		_fatal "This directory is not a project"
+	fi
+
+	_info "Running zest on all possible sub services"
+
+	# Check to see if the root directory itself is a service
+	if _zest_is_service . ; then
+		_info "Zesting root directory"
+		bash -c 'zest build && zest test && zest bundle' || _fatal "Zest all failed"
+	fi
+
+	# Look for services in folders down
+	for dir in `find . -type d -d 1`; do
+		_debug "Testing $dir"
+		if _zest_is_service $dir; then
+			_info "Zesting $dir"
+			bash -c "cd $dir; zest build && zest test && zest bundle" || _fatal "Zest all failed"
+		fi
+	done
+
+	# Run integration tests
+	zest integrate || _fatal "Zest all failed"
+
+	_info "Zest all completed succesfully"
 }
 
 _zest_help() {
@@ -419,6 +450,9 @@ case $1 in
 		;;
 	stop)
 		COMMAND="stop"
+		;;
+	all)
+		COMMAND="all"
 		;;
 	*)
 		COMMAND="unknown"
@@ -486,6 +520,9 @@ case $COMMAND in
 		;;
 	stop)
 		_zest_stop
+		;;
+	all)
+		_zest_all
 		;;
 esac
 

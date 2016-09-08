@@ -7,7 +7,7 @@
 # BUILD_CONTAINER (required for build command)
 # Specify a container to build your application in
 # In [repo/]image[:tag] format
-BUILD_CONTAINER=golang:1.6
+BUILD_CONTAINER=golang:1.7
 
 # TEST_CONTAINER (required if BUILD_CONTAINER not specified)
 # The container to put your application in to launch tests
@@ -30,7 +30,8 @@ VERSION=0.1.0
 
 # MOUNT_DIR
 # Specifies where the project code will be mounted in the BUILD_CONTAINER
-# Will be mounted at $BUILD_MOUNT_DIR/<service-name>
+# and TEST_CONTAINER, for building and testing respectively
+# Will be mounted at $MOUNT_DIR/<service-name>
 MOUNT_DIR=
 
 # Build()
@@ -52,7 +53,7 @@ Test() {
 	# ex:
 	# go test
 	# npm test
-	go test
+	:
 }
 
 # Version()
@@ -61,5 +62,5 @@ Test() {
 Version() {
 	# ex:
 	# git describe --tags
-	git describe --tag 2> /dev/null
+	:
 }

@@ -4,8 +4,5 @@ services:
     image: "test/example:latest"
     ports:
       - 2222:2222
-  integrater:
-    image: "ubuntu:14.04"
-    command: 'curl example:8080 | grep "Hello world"'
-    depends_on:
-      - example
+    environment:
+      - ENVIRONMENT=production

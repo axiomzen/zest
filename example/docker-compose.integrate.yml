@@ -1,0 +1,15 @@
+version: "2"
+services:
+
+  # Here we override some variables from the production compose for testing
+  example:
+    environment:
+      - ENVIRONMENT=testing
+
+  # The integration testing binary is added here as it's not present in production
+  integrater:
+    image: example/tester
+    environment:
+      - TARGET=example
+    depends_on:
+      - example
