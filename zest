@@ -282,7 +282,7 @@ _zest_init_service() {
 
 	if [[ ! -f Zestfile ]]; then
 		_info "Adding default Zestfile"
-		cp /usr/local/share/zest/Zestfile.example Zestfile
+		cp /usr/local/share/zest/Zestfile-example Zestfile
 	fi
 
 	if [[ ! -f Dockerfile ]]; then
