@@ -119,13 +119,12 @@ _zest_stop() {
 _zest_build() {
 
 	# Get the service name (folder name)
-	CURDIR=$(basename `pwd`)
-	# _debug "Using service name $SERVICE"
+	SERVICE=$(basename `pwd`)
 
 	# First ensure we're a service
 	_debug "Checking service"
 	if ! _zest_is_service . ; then
-		_fatal "$CURDIR is not a service"
+		_fatal "$SERVICE is not a service"
 	fi
 
 	# load the Zestfile
@@ -144,17 +143,16 @@ _zest_build() {
 	_debug "Found _zester at $ZESTER_PATH"
 
 	# check for service override
-	if [[ ! "$SERVICE" == "" ]]; then
-		SERVICENAME=$SERVICE
-		_debug "SERVICE set, using $SERVICENAME"
+	if [[ ! "$SERVICE_NAME" == "" ]]; then
+		SERVICE=$SERVICE_NAME
+		_debug "SERVICE_NAME set, using $SERVICE"
 	else
-		SERVICENAME=CURDIR
-		_debug "SERVICE not set, using $SERVICENAME"
+		_debug "SERVICE_NAME not set, using $SERVICE"
 	fi
 
 	# Build in the container
-	_info "Building service $SERVICENAME in $BUILD_CONTAINER"
-	docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICENAME -w $MOUNT_DIR/$SERVICENAME -v $ZESTER_PATH:/usr/bin/zester $BUILD_CONTAINER zester build --name $SERVICENAME
+	_info "Building service $SERVICE in $BUILD_CONTAINER"
+	docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester $BUILD_CONTAINER zester build --name $SERVICE
 
 	if [[ $? -ne 0 ]]; then
 		_fatal "Build failed"
@@ -166,8 +164,7 @@ _zest_build() {
 _zest_bundle() {
 
 	# Get the service name (folder name)
-	CURDIR=$(basename `pwd`)
-	# _debug "Using service name $SERVICE"
+	SERVICE=$(basename `pwd`)
 
 	# First ensure we're a service
 	_debug "Checking service"
@@ -199,23 +196,22 @@ _zest_bundle() {
 	fi
 
 	# check for service override
-	if [[ ! "$SERVICE" == "" ]]; then
-		SERVICENAME=$SERVICE
-		_debug "SERVICE set, using $SERVICENAME"
+	if [[ ! "$SERVICE_NAME" == "" ]]; then
+		SERVICE=$SERVICE_NAME
+		_debug "SERVICE_NAME set, using $SERVICE"
 	else
-		SERVICENAME=CURDIR
-		_debug "SERVICE not set, using $SERVICENAME"
+		_debug "SERVICE_NAME not set, using $SERVICE"
 	fi
 
 	# Build the image
-	_info "Bundling image $REPO/$SERVICENAME:$VERSION"
+	_info "Bundling image $REPO/$SERVICE:$VERSION"
 
 	if [[ "$IMAGE_SERVER" == "" ]]; then
 		_debug "Not using image server"
-		docker build -t $REPO/$SERVICENAME:$VERSION -t $REPO/$SERVICENAME:latest .
+		docker build -t $REPO/$SERVICE:$VERSION -t $REPO/$SERVICE:latest .
 	else
 		_debug "Using image server $IMAGE_SERVER"
-		docker build -t $IMAGE_SERVER/$REPO/$SERVICENAME:$VERSION -t $IMAGE_SERVER/$REPO/$SERVICENAME:latest .
+		docker build -t $IMAGE_SERVER/$REPO/$SERVICE:$VERSION -t $IMAGE_SERVER/$REPO/$SERVICE:latest .
 	fi
 
 	if [[ $? -ne 0 ]]; then
@@ -228,8 +224,7 @@ _zest_bundle() {
 _zest_test() {
 
 	# Get the service name (folder name)
-	CURDIR=$(basename `pwd`)
-	# _debug "Using service name $SERVICE"
+	SERVICE=$(basename `pwd`)
 
 	# First ensure we're a service
 	_debug "Checking service"
@@ -256,17 +251,16 @@ _zest_test() {
 	_debug "Found _zester at $ZESTER_PATH"
 
 	# check for service override
-	if [[ ! "$SERVICE" == "" ]]; then
-		SERVICENAME=$SERVICE
-		_debug "SERVICE set, using $SERVICENAME"
+	if [[ ! "$SERVICE_NAME" == "" ]]; then
+		SERVICE=$SERVICE_NAME
+		_debug "SERVICE_NAME set, using $SERVICE"
 	else
-		SERVICENAME=CURDIR
-		_debug "SERVICE not set, using $SERVICENAME"
+		_debug "SERVICE_NAME not set, using $SERVICE"
 	fi
 
 	# Build in the container
-	_info "Testing service $SERVICENAME in $BUILD_CONTAINER"
-	docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICENAME -w $MOUNT_DIR/$SERVICENAME -v $ZESTER_PATH:/usr/bin/zester $BUILD_CONTAINER zester test --name $SERVICENAME
+	_info "Testing service $SERVICE in $BUILD_CONTAINER"
+	docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester $BUILD_CONTAINER zester test --name $SERVICE
 
 	if [[ $? -ne 0 ]]; then
 		_fatal "Test failed"
@@ -278,13 +272,13 @@ _zest_test() {
 _zest_version() {
 
 	# Get the service name (folder name)
-	CURDIR=$(basename `pwd`)
-	# _debug "Using service name $SERVICE"
+	SERVICE=$(basename `pwd`)
+	_debug "Current directory is $SERVICE"
 
 	# First ensure we're a service
 	_debug "Checking service"
 	if ! _zest_is_service . ; then
-		_fatal "$CURDIR is not a service"
+		_fatal "$SERVICE is not a service"
 	fi
 
 	# load the Zestfile
@@ -340,13 +334,12 @@ _zest_init_project() {
 _zest_enter() {
 
 	# Get the service name (folder name)
-	CURDIR=$(basename `pwd`)
-	# _debug "Using service name $SERVICE"
+	SERVICE=$(basename `pwd`)
 
 	# First ensure we're a service
 	_debug "Checking service"
 	if ! _zest_is_service . ; then
-		_fatal "$CURDIR is not a service"
+		_fatal "$SERVICE is not a service"
 	fi
 
 	# load the Zestfile
@@ -358,16 +351,15 @@ _zest_enter() {
 	fi
 
 	# check for service override
-	if [[ ! "$SERVICE" == "" ]]; then
-		SERVICENAME=$SERVICE
-		_debug "SERVICE set, using $SERVICENAME"
+	if [[ ! "$SERVICE_NAME" == "" ]]; then
+		SERVICE=$SERVICE_NAME
+		_debug "SERVICE_NAME set, using $SERVICE"
 	else
-		SERVICENAME=CURDIR
-		_debug "SERVICE not set, using $SERVICENAME"
+		_debug "SERVICE_NAME not set, using $SERVICE"
 	fi
 
 	_info "Entering $BUILD_CONTAINER for developemnt"
-	docker run -v $(pwd):/$SERVICENAME -w /$SERVICENAME -ti $BUILD_CONTAINER bash -i
+	docker run -v $(pwd):/$SERVICE -w /$SERVICE -ti $BUILD_CONTAINER bash -i
 
 	_info "Leaving dev container"
 }
