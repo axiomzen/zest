@@ -169,7 +169,7 @@ _zest_bundle() {
 	# First ensure we're a service
 	_debug "Checking service"
 	if ! _zest_is_service . ; then
-		_fatal "$CURDIR is not a service"
+		_fatal "$SERVICE is not a service"
 	fi
 
 	# load the Zestfile
@@ -229,7 +229,7 @@ _zest_test() {
 	# First ensure we're a service
 	_debug "Checking service"
 	if ! _zest_is_service . ; then
-		_fatal "$CURDIR is not a service"
+		_fatal "$SERVICE is not a service"
 	fi
 
 	# load the Zestfile
