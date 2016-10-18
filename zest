@@ -62,7 +62,16 @@ _zest_is_service() {
 		return 1
 	fi
 
-	if [[ ! -r $1/Dockerfile ]]; then
+	# check for docker file override
+	if [[ ! "$DOCKER_FILE" == "" ]]; then
+		DOCKERFILE=$DOCKER_FILE
+		_debug "DOCKER_FILE set, using $DOCKERFILE"
+	else
+		DOCKERFILE=Dockerfile
+		_debug "DOCKER_FILE not set, using $DOCKERFILE"
+	fi
+
+	if [[ ! -r $1/$DOCKERFILE ]]; then
 		return 1
 	fi
 
@@ -206,12 +215,21 @@ _zest_bundle() {
 	# Build the image
 	_info "Bundling image $REPO/$SERVICE:$VERSION"
 
+	# check for docker file override
+	if [[ ! "$DOCKER_FILE" == "" ]]; then
+		DOCKERFILE=$DOCKER_FILE
+		_debug "DOCKER_FILE set, using $DOCKERFILE"
+	else
+		DOCKERFILE=Dockerfile
+		_debug "DOCKER_FILE not set, using $DOCKERFILE"
+	fi
+
 	if [[ "$IMAGE_SERVER" == "" ]]; then
 		_debug "Not using image server"
-		docker build -t $REPO/$SERVICE:$VERSION -t $REPO/$SERVICE:latest .
+		docker build -t $REPO/$SERVICE:$VERSION -t $REPO/$SERVICE:latest -f $DOCKERFILE .
 	else
 		_debug "Using image server $IMAGE_SERVER"
-		docker build -t $IMAGE_SERVER/$REPO/$SERVICE:$VERSION -t $IMAGE_SERVER/$REPO/$SERVICE:latest .
+		docker build -t $IMAGE_SERVER/$REPO/$SERVICE:$VERSION -t $IMAGE_SERVER/$REPO/$SERVICE:latest -f $DOCKERFILE .
 	fi
 
 	if [[ $? -ne 0 ]]; then
