@@ -19,6 +19,10 @@ TEST_CONTAINER=
 # Defaults to the parent directory name (../)
 REPO=
 
+# The name of the service that the resulting image from a bundle will be tagged as
+# Defaults to the current directory name (./)
+SERVICE_NAME=
+
 # IMAGE_SERVER
 # The remote server to send the docker images to
 IMAGE_SERVER=
