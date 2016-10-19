@@ -211,15 +211,6 @@ _zest_bundle() {
 	# Build the image
 	_info "Bundling image $REPO/$SERVICE:$VERSION"
 
-	# check for docker file override
-	# if [[ ! "$DOCKER_FILE" == "" ]]; then
-	# 	DOCKERFILE=$DOCKER_FILE
-	# 	_debug "DOCKER_FILE set, using $DOCKERFILE"
-	# else
-	# 	DOCKERFILE=Dockerfile
-	# 	_debug "DOCKER_FILE not set, using $DOCKERFILE"
-	# fi
-
 	if [[ "$IMAGE_SERVER" == "" ]]; then
 		_debug "Not using image server"
 		docker build -t $REPO/$SERVICE:$VERSION -t $REPO/$SERVICE:latest -f $DOCKERFILE .
