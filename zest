@@ -62,7 +62,20 @@ _zest_is_service() {
 		return 1
 	fi
 
-	if [[ ! -r $1/Dockerfile ]]; then
+	# load the Zestfile
+	_debug "Loading Zestfile"
+	source $1/Zestfile
+
+	# check for docker file override
+	if [[ ! "$DOCKER_FILE" == "" ]]; then
+		DOCKERFILE=$DOCKER_FILE
+		_debug "DOCKER_FILE set, using $DOCKERFILE"
+	else
+		DOCKERFILE=Dockerfile
+		_debug "DOCKER_FILE not set, using $DOCKERFILE"
+	fi
+
+	if [[ ! -r $1/$DOCKERFILE ]]; then
 		return 1
 	fi
 
@@ -127,10 +140,6 @@ _zest_build() {
 		_fatal "$SERVICE is not a service"
 	fi
 
-	# load the Zestfile
-	_debug "Loading Zestfile"
-	source ./Zestfile
-
 	# Must have $BUILD_CONTAINER set
 	if [[ "$BUILD_CONTAINER" == "" ]]; then
 		_fatal "BUILD_CONTAINER not set in Zestfile"
@@ -172,10 +181,6 @@ _zest_bundle() {
 		_fatal "$SERVICE is not a service"
 	fi
 
-	# load the Zestfile
-	_debug "Loading Zestfile"
-	source ./Zestfile
-
 	# Get the version tag override
 	VERSION_OVERRIDE=$(Version)
 	if [[ ! "$VERSION_OVERRIDE" == "" ]]; then
@@ -208,10 +213,10 @@ _zest_bundle() {
 
 	if [[ "$IMAGE_SERVER" == "" ]]; then
 		_debug "Not using image server"
-		docker build -t $REPO/$SERVICE:$VERSION -t $REPO/$SERVICE:latest .
+		docker build -t $REPO/$SERVICE:$VERSION -t $REPO/$SERVICE:latest -f $DOCKERFILE .
 	else
 		_debug "Using image server $IMAGE_SERVER"
-		docker build -t $IMAGE_SERVER/$REPO/$SERVICE:$VERSION -t $IMAGE_SERVER/$REPO/$SERVICE:latest .
+		docker build -t $IMAGE_SERVER/$REPO/$SERVICE:$VERSION -t $IMAGE_SERVER/$REPO/$SERVICE:latest -f $DOCKERFILE .
 	fi
 
 	if [[ $? -ne 0 ]]; then
@@ -231,10 +236,6 @@ _zest_test() {
 	if ! _zest_is_service . ; then
 		_fatal "$SERVICE is not a service"
 	fi
-
-	# load the Zestfile
-	_debug "Loading Zestfile"
-	source ./Zestfile
 
 	# Must have $TEST_CONTAINER or $BUILD_CONTAINER set
 	if [[ "$TEST_CONTAINER" == "" ]]; then
@@ -280,10 +281,6 @@ _zest_version() {
 	if ! _zest_is_service . ; then
 		_fatal "$SERVICE is not a service"
 	fi
-
-	# load the Zestfile
-	_debug "Loading Zestfile"
-	source ./Zestfile
 
 	# Get the version tag override
 	VERSION_OVERRIDE=$(Version)
@@ -341,10 +338,6 @@ _zest_enter() {
 	if ! _zest_is_service . ; then
 		_fatal "$SERVICE is not a service"
 	fi
-
-	# load the Zestfile
-	_debug "Loading Zestfile"
-	source ./Zestfile
 
 	if [[ "$BUILD_CONTAINER" == "" ]]; then
 		_fatal "BUILD_CONTAINER not set"

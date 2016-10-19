@@ -4,6 +4,11 @@
 # This file contains all the definitions and scripts needed to build
 # and test each component of your project.
 
+# DOCKER_FILE
+# This will allow you to override the default location for the Dockerfile
+# which is otherwise assumed to be ./Dockerfile
+DOCKER_FILE=
+
 # BUILD_CONTAINER (required for build command)
 # Specify a container to build your application in
 # In [repo/]image[:tag] format
