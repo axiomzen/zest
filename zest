@@ -62,6 +62,10 @@ _zest_is_service() {
 		return 1
 	fi
 
+	# load the Zestfile
+	_debug "Loading Zestfile"
+	source $1/Zestfile
+
 	# check for docker file override
 	if [[ ! "$DOCKER_FILE" == "" ]]; then
 		DOCKERFILE=$DOCKER_FILE
@@ -136,10 +140,6 @@ _zest_build() {
 		_fatal "$SERVICE is not a service"
 	fi
 
-	# load the Zestfile
-	_debug "Loading Zestfile"
-	source ./Zestfile
-
 	# Must have $BUILD_CONTAINER set
 	if [[ "$BUILD_CONTAINER" == "" ]]; then
 		_fatal "BUILD_CONTAINER not set in Zestfile"
@@ -181,10 +181,6 @@ _zest_bundle() {
 		_fatal "$SERVICE is not a service"
 	fi
 
-	# load the Zestfile
-	_debug "Loading Zestfile"
-	source ./Zestfile
-
 	# Get the version tag override
 	VERSION_OVERRIDE=$(Version)
 	if [[ ! "$VERSION_OVERRIDE" == "" ]]; then
@@ -216,13 +212,13 @@ _zest_bundle() {
 	_info "Bundling image $REPO/$SERVICE:$VERSION"
 
 	# check for docker file override
-	if [[ ! "$DOCKER_FILE" == "" ]]; then
-		DOCKERFILE=$DOCKER_FILE
-		_debug "DOCKER_FILE set, using $DOCKERFILE"
-	else
-		DOCKERFILE=Dockerfile
-		_debug "DOCKER_FILE not set, using $DOCKERFILE"
-	fi
+	# if [[ ! "$DOCKER_FILE" == "" ]]; then
+	# 	DOCKERFILE=$DOCKER_FILE
+	# 	_debug "DOCKER_FILE set, using $DOCKERFILE"
+	# else
+	# 	DOCKERFILE=Dockerfile
+	# 	_debug "DOCKER_FILE not set, using $DOCKERFILE"
+	# fi
 
 	if [[ "$IMAGE_SERVER" == "" ]]; then
 		_debug "Not using image server"
@@ -249,10 +245,6 @@ _zest_test() {
 	if ! _zest_is_service . ; then
 		_fatal "$SERVICE is not a service"
 	fi
-
-	# load the Zestfile
-	_debug "Loading Zestfile"
-	source ./Zestfile
 
 	# Must have $TEST_CONTAINER or $BUILD_CONTAINER set
 	if [[ "$TEST_CONTAINER" == "" ]]; then
@@ -298,10 +290,6 @@ _zest_version() {
 	if ! _zest_is_service . ; then
 		_fatal "$SERVICE is not a service"
 	fi
-
-	# load the Zestfile
-	_debug "Loading Zestfile"
-	source ./Zestfile
 
 	# Get the version tag override
 	VERSION_OVERRIDE=$(Version)
@@ -359,10 +347,6 @@ _zest_enter() {
 	if ! _zest_is_service . ; then
 		_fatal "$SERVICE is not a service"
 	fi
-
-	# load the Zestfile
-	_debug "Loading Zestfile"
-	source ./Zestfile
 
 	if [[ "$BUILD_CONTAINER" == "" ]]; then
 		_fatal "BUILD_CONTAINER not set"
