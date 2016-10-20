@@ -151,12 +151,20 @@ _zest_build() {
 	fi
 	_debug "Found _zester at $ZESTER_PATH"
 
-	# check for service override
+	# Check for service override
 	if [[ ! "$SERVICE_NAME" == "" ]]; then
 		SERVICE=$SERVICE_NAME
 		_debug "SERVICE_NAME set, using $SERVICE"
 	else
 		_debug "SERVICE_NAME not set, using $SERVICE"
+	fi
+
+	# Do PreBuild
+	_info "Running PreBuild"
+	PreBuild
+
+	if [[ $? -ne 0 ]]; then
+		_fatal "PreBuild failed"
 	fi
 
 	# Build in the container
@@ -165,6 +173,14 @@ _zest_build() {
 
 	if [[ $? -ne 0 ]]; then
 		_fatal "Build failed"
+	fi
+
+	# Do PostBuild
+	_info "Running PostBuild"
+	PostBuild
+
+	if [[ $? -ne 0 ]]; then
+		_fatal "PostBuild failed"
 	fi
 
 	_info "Build success!"
@@ -208,6 +224,14 @@ _zest_bundle() {
 		_debug "SERVICE_NAME not set, using $SERVICE"
 	fi
 
+	# Do PreBundle
+	_info "Running PreBundle"
+	PreBundle
+
+	if [[ $? -ne 0 ]]; then
+		_fatal "PreBundle failed"
+	fi
+
 	# Build the image
 	_info "Bundling image $REPO/$SERVICE:$VERSION"
 
@@ -221,6 +245,14 @@ _zest_bundle() {
 
 	if [[ $? -ne 0 ]]; then
 		_fatal "Bundle failed"
+	fi
+
+	# Do PostBundle
+	_info "Running PostBundle"
+	PostBundle
+
+	if [[ $? -ne 0 ]]; then
+		_fatal "PostBundle failed"
 	fi
 
 	_info "Bundle success!"

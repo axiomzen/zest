@@ -43,6 +43,24 @@ VERSION=
 # Will be mounted at $MOUNT_DIR/<service-name>
 MOUNT_DIR=
 
+# PreBuild()
+# The script to be executed outside of the build container (local machine)
+# before the build step
+PreBuild() {
+	# ex:
+	# cat stuff > settings.xml
+	:
+}
+
+# PostBuild()
+# The script to be executed outside of the build container (local machine)
+# after the build step.
+PostBuild() {
+	# ex:
+	# cleanup.sh
+	:
+}
+
 # Build()
 # The script to be executed inside BUILD_CONTAINER in the project directory
 # to build any assets or binaries
@@ -71,5 +89,23 @@ Test() {
 Version() {
 	# ex:
 	# git describe --tags
+	:
+}
+
+# PreBundle()
+# The script to be executed outside of the build container (local machine)
+# before the bundle step
+PreBundle() {
+	# ex:
+	# cat stuff > settings.xml
+	:
+}
+
+# PostBundle()
+# The script to be executed outside of the build container (local machine)
+# after the build step.
+PostBundle() {
+	# ex:
+	# rm settings.xml
 	:
 }
