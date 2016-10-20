@@ -169,7 +169,14 @@ _zest_build() {
 
 	# Build in the container
 	_info "Building service $SERVICE in $BUILD_CONTAINER"
-	docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester $BUILD_CONTAINER zester build --name $SERVICE
+
+	# Check for cache dir
+	if [[ ! -z $CACHE_DIR_SRC && ! -z $CACHE_DIR_DST ]]; then
+		_debug "Including cache directory $CACHE_DIR_SRC => $CACHE_DIR_DST"
+		docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester:ro -v $CACHE_DIR_SRC:$CACHE_DIR_DST $BUILD_CONTAINER zester build --name $SERVICE
+	else
+		docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester:ro $BUILD_CONTAINER zester build --name $SERVICE
+	fi
 
 	if [[ $? -ne 0 ]]; then
 		_fatal "Build failed"
