@@ -43,6 +43,12 @@ VERSION=
 # Will be mounted at $MOUNT_DIR/<service-name>
 MOUNT_DIR=
 
+# CACHE_DIR_SRC
+# CACHE_DIR_DST
+# Additional mount for cached code, modules, or assets
+CACHE_DIR_SRC=
+CACHE_DIR_DST=
+
 # PreBuild()
 # The script to be executed outside of the build container (local machine)
 # before the build step
