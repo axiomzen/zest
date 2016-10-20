@@ -55,14 +55,22 @@ _zest_get_zester() {
 }
 
 # Check we are a service
+#
+# $1 - directory to check
+# $2 - file to look for
 _zest_is_service() {
 
+	# Override Zestfile if needed
+	if [[ ! -z "$2" ]]; then
+		ZESTFILE=$2
+	fi
+
 	# Components must have a Zestfile and a Dockerfile
-	if [[ ! -r $1/Zestfile ]]; then
+	if [[ ! -r $1/$ZESTFILE ]]; then
 		return 1
 	fi
 
-	if [[ ! -r $1/Dockerfile ]]; then
+	if [[ ! -r $1/$ZESTFILE ]]; then
 		return 1
 	fi
 
@@ -70,6 +78,8 @@ _zest_is_service() {
 }
 
 # Check we are a project
+#
+# $1 - Directory to check in
 _zest_is_project() {
 
 	# Projects must have a docker-compose.yml and a Peelfile
@@ -116,7 +126,18 @@ _zest_stop() {
 	docker-compose down
 }
 
+# Build creates binaries and assets inside the build container
+#
+# $1 - Name of the Zestfile to use
 _zest_build() {
+
+	# Set the Zestfile to use
+	if [[ -z "$1" ]]; then
+		ZESTFILE=./Zestfile
+	else
+		ZESTFILE=$1
+		_debug "Overriding Zestfile with $ZESTFILE"
+	fi
 
 	# Get the service name (folder name)
 	SERVICE=$(basename `pwd`)
@@ -124,13 +145,13 @@ _zest_build() {
 
 	# First ensure we're a service
 	_debug "Checking service"
-	if ! _zest_is_service . ; then
+	if ! _zest_is_service . $ZESTFILE ; then
 		_fatal "$SERVICE is not a service"
 	fi
 
 	# load the Zestfile
 	_debug "Loading Zestfile"
-	source ./Zestfile
+	source $ZESTFILE
 
 	# Must have $BUILD_CONTAINER set
 	if [[ "$BUILD_CONTAINER" == "" ]]; then
@@ -154,7 +175,18 @@ _zest_build() {
 	_info "Build success!"
 }
 
+# Builds the docker image
+#
+# $1 - The zestfile to use
 _zest_bundle() {
+
+	# Set the Zestfile to use
+	if [[ -z "$1" ]]; then
+		ZESTFILE=./Zestfile
+	else
+		ZESTFILE=$1
+		_debug "Overriding Zestfile with $ZESTFILE"
+	fi
 
 	# Get the service name (folder name)
 	SERVICE=$(basename `pwd`)
@@ -162,13 +194,13 @@ _zest_bundle() {
 
 	# First ensure we're a service
 	_debug "Checking service"
-	if ! _zest_is_service . ; then
+	if ! _zest_is_service . $ZESTFILE ; then
 		_fatal "$SERVICE is not a service"
 	fi
 
 	# load the Zestfile
 	_debug "Loading Zestfile"
-	source ./Zestfile
+	source $ZESTFILE
 
 	# Get the version tag override
 	VERSION_OVERRIDE=$(Version)
@@ -278,6 +310,7 @@ _zest_version() {
 	echo "$VERSION"
 }
 
+# Add the required files to be a service
 _zest_init_service() {
 
 	if [[ ! -f Zestfile ]]; then
@@ -294,6 +327,7 @@ _zest_init_service() {
 
 }
 
+# Add the required files to be a project
 _zest_init_project() {
 
 	if [[ ! -f docker-compose.yml ]]; then
