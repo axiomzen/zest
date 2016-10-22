@@ -1,7 +1,7 @@
 version: "2"
 services:
   example:
-    image: "test/example:latest"
+    image: "example/example:latest"
     ports:
       - 2222:2222
     environment:

@@ -1,0 +1,9 @@
+language: go
+go:
+  - 1.7.1
+branches:
+  only:
+  - master
+script:
+  - cd example
+  - zest all

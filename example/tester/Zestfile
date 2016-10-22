@@ -4,6 +4,11 @@
 # This file contains all the definitions and scripts needed to build
 # and test each component of your project.
 
+# DOCKER_FILE
+# This will allow you to override the default location for the Dockerfile
+# which is otherwise assumed to be ./Dockerfile
+DOCKER_FILE=
+
 # BUILD_CONTAINER (required for build command)
 # Specify a container to build your application in
 # In [repo/]image[:tag] format
@@ -19,6 +24,10 @@ TEST_CONTAINER=
 # Defaults to the parent directory name (../)
 REPO=example
 
+# The name of the service that the resulting image from a bundle will be tagged as
+# Defaults to the current directory name (./)
+SERVICE_NAME=
+
 # IMAGE_SERVER
 # The remote server to send the docker images to
 IMAGE_SERVER=
@@ -33,6 +42,30 @@ VERSION=0.1.0
 # and TEST_CONTAINER, for building and testing respectively
 # Will be mounted at $MOUNT_DIR/<service-name>
 MOUNT_DIR=
+
+# CACHE_DIR_SRC
+# CACHE_DIR_DST
+# Additional mount for cached code, modules, or assets
+CACHE_DIR_SRC=
+CACHE_DIR_DST=
+
+# PreBuild()
+# The script to be executed outside of the build container (local machine)
+# before the build step
+PreBuild() {
+	# ex:
+	# cat stuff > settings.xml
+	:
+}
+
+# PostBuild()
+# The script to be executed outside of the build container (local machine)
+# after the build step.
+PostBuild() {
+	# ex:
+	# cleanup.sh
+	:
+}
 
 # Build()
 # The script to be executed inside BUILD_CONTAINER in the project directory
@@ -62,5 +95,23 @@ Test() {
 Version() {
 	# ex:
 	# git describe --tags
+	:
+}
+
+# PreBundle()
+# The script to be executed outside of the build container (local machine)
+# before the bundle step
+PreBundle() {
+	# ex:
+	# cat stuff > settings.xml
+	:
+}
+
+# PostBundle()
+# The script to be executed outside of the build container (local machine)
+# after the build step.
+PostBundle() {
+	# ex:
+	# rm settings.xml
 	:
 }
