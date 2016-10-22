@@ -1,0 +1,12 @@
+language: go
+go:
+  - 1.7.1
+branches:
+  only:
+  - master
+services:
+  - docker
+script:
+  - export PATH=$PATH:$PWD/
+  - cd example
+  - ../zest all

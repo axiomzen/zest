@@ -45,7 +45,7 @@ _zest_get_zester() {
 	fi
 
 	# then look for it in the $PATH
-	if which -s _zester; then
+	if which _zester > /dev/null; then
 		ZESTER_PATH=$(which _zester)
 		return 0
 	fi
