@@ -5,6 +5,6 @@ branches:
   only:
   - master
 script:
-  - make install
+  - export PATH=$PATH:$PWD/
   - cd example
   - ../zest all
