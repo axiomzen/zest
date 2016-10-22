@@ -6,4 +6,4 @@ branches:
   - master
 script:
   - cd example
-  - zest all
+  - ../zest all
