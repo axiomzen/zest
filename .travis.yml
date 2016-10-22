@@ -4,6 +4,8 @@ go:
 branches:
   only:
   - master
+services:
+  - docker
 script:
   - export PATH=$PATH:$PWD/
   - cd example
