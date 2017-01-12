@@ -454,7 +454,7 @@ _zest_all() {
 	fi
 
 	# Look for services in folders down
-	for dir in `find . -type d -d 1`; do
+	for dir in `find . -type d -maxdepth 1`; do
 		_debug "Testing $dir"
 		if _zest_is_service $dir; then
 			_info "Zesting $dir"
