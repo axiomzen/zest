@@ -126,7 +126,7 @@ _zest_stop() {
 
 	_info "Stopping project"
 
-	docker-compose down
+	docker-compose down -v
 }
 
 _zest_build() {
@@ -390,7 +390,7 @@ _zest_enter() {
 		_debug "SERVICE_NAME not set, using $SERVICE"
 	fi
 
-	_info "Entering $BUILD_CONTAINER for developemnt"
+	_info "Entering $BUILD_CONTAINER for development"
 	docker run -v $(pwd):/$SERVICE -w /$SERVICE -ti $BUILD_CONTAINER bash -i
 
 	_info "Leaving dev container"
@@ -406,9 +406,15 @@ _zest_integrate() {
 	# Get the integrate project
 	_debug "Getting integrate service from Peelfile"
 	INTEGRATE_SERVICE=`grep -E -i "^integrate: [a-zA-Z\-]+$" Peelfile | grep -o -E "[a-zA-Z\-]+$"`
+	# if this was written in go, we could load/check the compose file as well
+	PROJECT_NAME=`grep -E -i "^project: [a-zA-Z\-]+$" Peelfile | grep -o -E "[a-zA-Z\-]+$"`
 
 	if [[ "$INTEGRATE_SERVICE" == "" ]]; then
 		_fatal "integrate not speficied in Peelfile"
+	fi
+
+	if [[ "$PROJECT_NAME" == "" ]]; then
+		_fatal "project not speficied in Peelfile"
 	fi
 
 	# Run compose
@@ -422,19 +428,52 @@ _zest_integrate() {
 
 	# Integrate finished
 	# Capture return value
-	INTEGRATE_EXIT_CODE=$?
+	# docker compose always returns 0, so we have to inspect what happened
+
+	# we know integrator name, as that is in the peel file
+	# we can either cheat ($pwd -> remove -) or add something to the peelfile
+	# <project name>_<service name>_1
+
+	# Inspect containers to see if they exited
+	# docker-compose ps doesn't support -a so we need to use docker ps
+	INTEGRATE_EXIT_CODE=`docker ps -a -q -f name=${PROJECT_NAME}_${INTEGRATE_SERVICE}_1 | xargs docker inspect -f '{{ .State.ExitCode }}' | grep -v 0 | wc -l | tr -d ' '`
 
 	_debug "Compose exited with status $INTEGRATE_EXIT_CODE"
 
 	# Clean up
-	_debug "Cleaning up"
-	docker-compose down
+	# Lets clean up only if the tests passed
+	# otherwise, we probably want to look at the logs of the containers involved
+
+	# if [[ $2 -eq "keep" ]]; then
+	# 	_debug "Skipping cleanup up"
+	# else
+	# 	_debug "Cleaning up"
+	# 	if [[ -r "docker-compose.integrate.yml" ]]; then
+	# 		_debug "running compose down with integrate overrides"
+	# 		docker-compose -f docker-compose.yml -f docker-compose.integrate.yml down -v
+	# 	else
+	# 		_debug "running compose down"
+	# 		docker-compose down -v
+	# 	fi
+	# fi
 
 	if [[ $INTEGRATE_EXIT_CODE -eq 0 ]]; then
-		_info "Integration tests passed"
+		_info "Integration tests passed, cleaning up"
+		_zest_integrate_down
 	else
 		_error "Integration tests failed"
 		exit $INTEGRATE_EXIT_CODE
+	fi
+}
+
+_zest_integrate_down() {
+	_debug "Cleaning up"
+	if [[ -r "docker-compose.integrate.yml" ]]; then
+		_debug "running compose down with integrate overrides"
+		docker-compose -f docker-compose.yml -f docker-compose.integrate.yml down -v
+	else
+		_debug "running compose down"
+		docker-compose down -v
 	fi
 }
 
@@ -448,14 +487,15 @@ _zest_all() {
 	_info "Running zest on all possible sub services"
 
 	# Check to see if the root directory itself is a service
-	if _zest_is_service . ; then
-		_info "Zesting root directory"
-		bash -c 'zest build && zest test && zest bundle' || _fatal "Zest all failed"
-	fi
+	# This seems to be covered already
+	# if _zest_is_service . ; then
+	# 	_info "Zesting root directory"
+	# 	bash -c 'zest build && zest test && zest bundle' || _fatal "Zest all failed"
+	# fi
 
 	# Look for services in folders down
 	for dir in `find . -type d -maxdepth 1`; do
-		_debug "Testing $dir"
+		_debug "Checking $dir"
 		if _zest_is_service $dir; then
 			_info "Zesting $dir"
 			bash -c "cd $dir; zest build && zest test && zest bundle" || _fatal "Zest all failed"
@@ -463,9 +503,7 @@ _zest_all() {
 	done
 
 	# Run integration tests
-	zest integrate || _fatal "Zest all failed"
-
-	_info "Zest all completed succesfully"
+	( zest integrate && _info "Zest all completed succesfully" ) || ( zest deintegrate; _fatal "Zest all failed" )
 }
 
 _zest_help() {
@@ -505,10 +543,19 @@ case $1 in
 	integrate)
 		COMMAND="integrate"
 		;;
+	deintegrate)
+		COMMAND="deintegrate"
+		;;
 	run)
 		COMMAND="run"
 		;;
+	up)
+		COMMAND="run"
+		;;
 	stop)
+		COMMAND="stop"
+		;;
+	down)
 		COMMAND="stop"
 		;;
 	all)
@@ -574,6 +621,9 @@ case $COMMAND in
 		;;
 	integrate)
 		_zest_integrate
+		;;
+	deintegrate)
+		_zest_integrate_down
 		;;
 	run)
 		_zest_run
