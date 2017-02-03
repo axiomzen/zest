@@ -43,15 +43,23 @@ source Zestfile
 if [[ "$1" == "build" ]]; then
 	_debug "Running build"
 
-	set -e
+	set -o errexit
+	set -o nounset
+	# set -o xtrace
 	Build
-	set +e
+	set +o errexit
+	set +o nounset
+	# set +o xtrace
 fi
 
 if [[ "$1" == "test" ]]; then
 	_debug "Running test"
 
-	set -e
+	set -o errexit
+	set -o nounset
+	# set -o xtrace
 	Test
-	set +e
+	set +o errexit
+	set +o nounset
+	# set +o xtrace
 fi
