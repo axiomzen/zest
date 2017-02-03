@@ -444,19 +444,6 @@ _zest_integrate() {
 	# Lets clean up only if the tests passed
 	# otherwise, we probably want to look at the logs of the containers involved
 
-	# if [[ $2 -eq "keep" ]]; then
-	# 	_debug "Skipping cleanup up"
-	# else
-	# 	_debug "Cleaning up"
-	# 	if [[ -r "docker-compose.integrate.yml" ]]; then
-	# 		_debug "running compose down with integrate overrides"
-	# 		docker-compose -f docker-compose.yml -f docker-compose.integrate.yml down -v
-	# 	else
-	# 		_debug "running compose down"
-	# 		docker-compose down -v
-	# 	fi
-	# fi
-
 	if [[ $INTEGRATE_EXIT_CODE -eq 0 ]]; then
 		_info "Integration tests passed, cleaning up"
 		_zest_integrate_down
@@ -486,14 +473,7 @@ _zest_all() {
 
 	_info "Running zest on all possible sub services"
 
-	# Check to see if the root directory itself is a service
-	# This seems to be covered already
-	# if _zest_is_service . ; then
-	# 	_info "Zesting root directory"
-	# 	bash -c 'zest build && zest test && zest bundle' || _fatal "Zest all failed"
-	# fi
-
-	# Look for services in folders down
+	# Look for services in root folder and folders down
 	for dir in `find . -type d -maxdepth 1`; do
 		_debug "Checking $dir"
 		if _zest_is_service $dir; then
@@ -503,7 +483,7 @@ _zest_all() {
 	done
 
 	# Run integration tests
-	( zest integrate && _info "Zest all completed succesfully" ) || ( zest deintegrate; _fatal "Zest all failed" )
+	( zest integrate && _info "Zest all completed succesfully" ) || ( zest disintegrate; _fatal "Zest all failed" )
 }
 
 _zest_help() {
@@ -543,19 +523,13 @@ case $1 in
 	integrate)
 		COMMAND="integrate"
 		;;
-	deintegrate)
-		COMMAND="deintegrate"
+	disintegrate)
+		COMMAND="disintegrate"
 		;;
 	run)
 		COMMAND="run"
 		;;
-	up)
-		COMMAND="run"
-		;;
-	stop)
-		COMMAND="stop"
-		;;
-	down)
+	stop|down)
 		COMMAND="stop"
 		;;
 	all)
@@ -622,7 +596,7 @@ case $COMMAND in
 	integrate)
 		_zest_integrate
 		;;
-	deintegrate)
+	disintegrate)
 		_zest_integrate_down
 		;;
 	run)
