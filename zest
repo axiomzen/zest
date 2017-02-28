@@ -172,7 +172,7 @@ _zest_build() {
 
 	# Check for cache directories
 
-	cache_mounts=()
+	local cache_mounts=()
 
 	# handle legacy variables
 	if [[ ! -z $CACHE_DIR_SRC && ! -z $CACHE_DIR_DST ]]; then
@@ -191,7 +191,7 @@ _zest_build() {
 		done
 	fi
 
-	cache_volumes=
+	local cache_volumes=
 	if [[ "${#cache_mounts[@]}" -gt 0 ]]; then
 		cache_volumes=$(printf -- "-v %s " "${cache_mounts[@]}")
 	fi
