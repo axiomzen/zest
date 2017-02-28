@@ -191,7 +191,11 @@ _zest_build() {
 		done
 	fi
 
-	cache_volumes=$(printf -- "-v %s " "${cache_mounts[@]}")
+	cache_volumes=
+	if [[ "${#cache_mounts[@]}" -gt 0 ]]; then
+		cache_volumes=$(printf -- "-v %s " "${cache_mounts[@]}")
+	fi
+
 	docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester:ro $cache_volumes $BUILD_CONTAINER zester build --name $SERVICE
 
 	if [[ $? -ne 0 ]]; then
