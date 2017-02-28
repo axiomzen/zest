@@ -180,13 +180,16 @@ _zest_build() {
 		cache_mounts+=("$CACHE_DIR_SRC:$CACHE_DIR_DST")
 	fi
 
-	cache_dir_count=${#CACHE_DIR_SRCS[@]}
-	for ((i=0; i < $cache_dir_count; i++)); do
-		src=${CACHE_DIR_SRCS[$i]}
-		dst=${CACHE_DIR_DSTS[$i]}
-               	_debug "Including cache directory $src => $dst"
-		cache_mounts+=("$src:$dst")
-	done
+	# handle new array variables
+	if [[ ! -z $CACHE_DIR_SRCS && ! -z $CACHE_DIR_DSTS ]]; then
+		cache_dir_count=${#CACHE_DIR_SRCS[@]}
+		for ((i=0; i < $cache_dir_count; i++)); do
+			src=${CACHE_DIR_SRCS[$i]}
+			dst=${CACHE_DIR_DSTS[$i]}
+			_debug "Including cache directory $src => $dst"
+			cache_mounts+=("$src:$dst")
+		done
+	fi
 
 	cache_volumes=$(printf -- "-v %s " "${cache_mounts[@]}")
 	docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester:ro $cache_volumes $BUILD_CONTAINER zester build --name $SERVICE
