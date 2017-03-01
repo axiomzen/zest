@@ -129,6 +129,36 @@ _zest_stop() {
 	docker-compose down -v
 }
 
+_zest_cache_volumes() {
+	# Check for cache directories
+
+	local cache_mounts=()
+
+	# handle legacy variables
+	if [[ ! -z $CACHE_DIR_SRC && ! -z $CACHE_DIR_DST ]]; then
+		_debug "Including cache directory $CACHE_DIR_SRC => $CACHE_DIR_DST"
+		cache_mounts+=("$CACHE_DIR_SRC:$CACHE_DIR_DST")
+	fi
+
+	# handle new array variables
+	if [[ ! -z $CACHE_DIR_SRCS && ! -z $CACHE_DIR_DSTS ]]; then
+		cache_dir_count=${#CACHE_DIR_SRCS[@]}
+		for ((i=0; i < $cache_dir_count; i++)); do
+			src=${CACHE_DIR_SRCS[$i]}
+			dst=${CACHE_DIR_DSTS[$i]}
+			_debug "Including cache directory $src => $dst"
+			cache_mounts+=("$src:$dst")
+		done
+	fi
+
+	local cache_volumes=
+	if [[ "${#cache_mounts[@]}" -gt 0 ]]; then
+		cache_volumes=$(printf -- "-v %s " "${cache_mounts[@]}")
+	fi
+
+	echo "$cache_volumes"
+}
+
 _zest_build() {
 
 	# Get the service name (folder name)
@@ -170,13 +200,7 @@ _zest_build() {
 	# Build in the container
 	_info "Building service $SERVICE in $BUILD_CONTAINER"
 
-	# Check for cache dir
-	if [[ ! -z $CACHE_DIR_SRC && ! -z $CACHE_DIR_DST ]]; then
-		_debug "Including cache directory $CACHE_DIR_SRC => $CACHE_DIR_DST"
-		docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester:ro -v $CACHE_DIR_SRC:$CACHE_DIR_DST $BUILD_CONTAINER zester build --name $SERVICE
-	else
-		docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester:ro $BUILD_CONTAINER zester build --name $SERVICE
-	fi
+	docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester:ro $(_zest_cache_volumes) $BUILD_CONTAINER zester build --name $SERVICE
 
 	if [[ $? -ne 0 ]]; then
 		_fatal "Build failed"
@@ -299,8 +323,8 @@ _zest_test() {
 	fi
 
 	# Build in the container
-	_info "Testing service $SERVICE in $BUILD_CONTAINER"
-	docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester $BUILD_CONTAINER zester test --name $SERVICE
+	_info "Testing service $SERVICE in $TEST_CONTAINER"
+	docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester:ro $(_zest_cache_volumes) $TEST_CONTAINER zester test --name $SERVICE
 
 	if [[ $? -ne 0 ]]; then
 		_fatal "Test failed"
