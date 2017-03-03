@@ -434,11 +434,11 @@ _zest_integrate() {
 	PROJECT_NAME=`grep -E -i "^project: " Peelfile | awk '{print $2}'`
 
 	if [[ "$INTEGRATE_SERVICE" == "" ]]; then
-		_fatal "integrate not speficied in Peelfile"
+		_fatal "integrate not specified in Peelfile"
 	fi
 
 	if [[ "$PROJECT_NAME" == "" ]]; then
-		_fatal "project not speficied in Peelfile"
+		_fatal "project not specified in Peelfile"
 	fi
 
 	# Run compose
