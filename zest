@@ -105,7 +105,7 @@ _zest_run() {
 		_fatal "Not a project"
 	fi
 
-	RUN_SERVICE=`grep -E -i "^run: [a-zA-Z\-]+$" Peelfile | grep -o -E "[a-zA-Z\-]+$"`
+	RUN_SERVICE=`grep -E -i "^run: " Peelfile | awk '{print $2}'`
 
 	if [[ "$RUN_SERVICE" == "" ]]; then
 		_fatal "run: not specified in Peelfile"
@@ -429,9 +429,9 @@ _zest_integrate() {
 
 	# Get the integrate project
 	_debug "Getting integrate service from Peelfile"
-	INTEGRATE_SERVICE=`grep -E -i "^integrate: [a-zA-Z\-]+$" Peelfile | grep -o -E "[a-zA-Z\-]+$"`
+	INTEGRATE_SERVICE=`grep -E -i "^integrate: " Peelfile | awk '{print $2}'`
 	# if this was written in go, we could load/check the compose file as well
-	PROJECT_NAME=`grep -E -i "^project: [a-zA-Z\-]+$" Peelfile | grep -o -E "[a-zA-Z\-]+$"`
+	PROJECT_NAME=`grep -E -i "^project: " Peelfile | awk '{print $2}'`
 
 	if [[ "$INTEGRATE_SERVICE" == "" ]]; then
 		_fatal "integrate not specified in Peelfile"
