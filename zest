@@ -126,7 +126,7 @@ _zest_stop() {
 
 	_info "Stopping project"
 
-	docker-compose down -v
+	docker-compose down -v --rmi local
 }
 
 _zest_cache_volumes() {
