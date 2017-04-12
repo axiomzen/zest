@@ -85,14 +85,44 @@ _zest_is_service() {
 # Check we are a project
 _zest_is_project() {
 
-	# Projects must have a docker-compose.yml and a Peelfile
-	if [[ ! -r $1/docker-compose.yml ]]; then
-		return 1
-	fi
-
+	# Projects must have a Peelfile
 	if [[ ! -r $1/Peelfile ]]; then
 		return 1
 	fi
+
+	# Check to see what compose file we should use
+	COMPOSE_FILE=`grep -E -i "^compose: " Peelfile | awk '{print $2}'`
+
+	# If its blank, use default
+	if [[ "$COMPOSE_FILE" == "" ]]; then
+		COMPOSE_FILE=$1/docker-compose.yml
+	else
+		COMPOSE_FILE=$1/$COMPOSE_FILE
+	fi
+
+	# Projects must have a docker-compose file of somesort
+	if [[ ! -r $COMPOSE_FILE ]]; then
+		return 1
+	fi
+
+	_debug "Using docker-compose file at $COMPOSE_FILE"
+	
+	# Check to see what integration compose file we should use
+	COMPOSE_INTEGRATE_FILE=`grep -E -i "^compose-integrate: " Peelfile | awk '{print $2}'`
+
+	# If its blank, use default
+	if [[ "$COMPOSE_INTEGRATE_FILE" == "" ]]; then
+		COMPOSE_INTEGRATE_FILE=$1/docker-compose.integrate.yml
+	else
+		COMPOSE_INTEGRATE_FILE=$1/$COMPOSE_INTEGRATE_FILE
+	fi
+	
+	# Projects must have a docker-compose integration file of some sort
+	if [[ ! -r $COMPOSE_INTEGRATE_FILE ]]; then
+		return 1
+	fi
+
+	_debug "Using docker-compose integration file at $COMPOSE_INTEGRATE_FILE"
 
 	return 0
 }
@@ -113,7 +143,7 @@ _zest_run() {
 
 	_info "Running service $RUN_SERVICE"
 
-	docker-compose up -d $RUN_SERVICE
+	docker-compose -f $COMPOSE_FILE up -d $RUN_SERVICE
 }
 
 _zest_stop() {
@@ -126,7 +156,7 @@ _zest_stop() {
 
 	_info "Stopping project"
 
-	docker-compose down -v
+	docker-compose -f $COMPOSE_FILE down -v
 }
 
 _zest_cache_volumes() {
@@ -442,12 +472,12 @@ _zest_integrate() {
 	fi
 
 	# Run compose
-	if [[ -r "docker-compose.integrate.yml" ]]; then
+	if [[ -r $COMPOSE_INTEGRATE_FILE ]]; then
 		_debug "running compose with integrate overrides"
-		docker-compose -f docker-compose.yml -f docker-compose.integrate.yml up $INTEGRATE_SERVICE
+		docker-compose -f $COMPOSE_FILE -f $COMPOSE_INTEGRATE_FILE up $INTEGRATE_SERVICE
 	else
 		_debug "running compose"
-		docker-compose up $INTEGRATE_SERVICE
+		docker-compose -f $COMPOSE_FILE up $INTEGRATE_SERVICE
 	fi
 
 	# Integrate finished
@@ -479,12 +509,12 @@ _zest_integrate() {
 
 _zest_integrate_down() {
 	_debug "Cleaning up"
-	if [[ -r "docker-compose.integrate.yml" ]]; then
+	if [[ -r $COMPOSE_INTEGRATE_FILE ]]; then
 		_debug "running compose down with integrate overrides"
-		docker-compose -f docker-compose.yml -f docker-compose.integrate.yml down -v
+		docker-compose -f $COMPOSE_FILE -f $COMPOSE_INTEGRATE_FILE down -v
 	else
 		_debug "running compose down"
-		docker-compose down -v
+		docker-compose -f $COMPOSE_FILE down -v
 	fi
 }
 
