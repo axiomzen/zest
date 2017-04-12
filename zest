@@ -514,7 +514,7 @@ _zest_integrate_down() {
 		docker-compose -f $COMPOSE_FILE -f $COMPOSE_INTEGRATE_FILE down -v
 	else
 		_debug "running compose down"
-		docker-compose -f $COMPSE_FILE down -v
+		docker-compose -f $COMPOSE_FILE down -v
 	fi
 }
 
