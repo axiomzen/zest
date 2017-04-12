@@ -1,3 +1,5 @@
 run: example
 integrate: integrater
 project: example
+compose: docker-compose.yml
+compose-integrate: docker-compose.integrate.yml

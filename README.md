@@ -27,6 +27,7 @@ version | Execute `Version()` to see what the container will be tagged as
 ## Project
 A project is a collection of services that run together to form an application stack.
 Each project must container a `docker-compose.yml` that defines the services in the project, and a `Peelfile` for determining what services are the root of the project.
+The `Peelfile` can also optinally specify where to find the relavent compose files.
 
 ### Commands
 Command | Result
