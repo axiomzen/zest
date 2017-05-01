@@ -106,7 +106,7 @@ _zest_is_project() {
 	fi
 
 	_debug "Using docker-compose file at $COMPOSE_FILE"
-	
+
 	# Check to see what integration compose file we should use
 	COMPOSE_INTEGRATE_FILE=`grep -E -i "^compose-integrate: " Peelfile | awk '{print $2}'`
 
@@ -116,7 +116,7 @@ _zest_is_project() {
 	else
 		COMPOSE_INTEGRATE_FILE=$1/$COMPOSE_INTEGRATE_FILE
 	fi
-	
+
 	# Projects must have a docker-compose integration file of some sort
 	if [[ ! -r $COMPOSE_INTEGRATE_FILE ]]; then
 		return 1
@@ -298,10 +298,10 @@ _zest_bundle() {
 
 	if [[ "$IMAGE_SERVER" == "" ]]; then
 		_debug "Not using image server"
-		docker build -t $REPO/$SERVICE:$VERSION -t $REPO/$SERVICE:latest -f $DOCKERFILE .
+		docker build $BUILD_ARGS -t $REPO/$SERVICE:$VERSION -t $REPO/$SERVICE:latest -f $DOCKERFILE .
 	else
 		_debug "Using image server $IMAGE_SERVER"
-		docker build -t $IMAGE_SERVER/$REPO/$SERVICE:$VERSION -t $IMAGE_SERVER/$REPO/$SERVICE:latest -f $DOCKERFILE .
+		docker build $BUILD_ARGS -t $IMAGE_SERVER/$REPO/$SERVICE:$VERSION -t $IMAGE_SERVER/$REPO/$SERVICE:latest -f $DOCKERFILE .
 	fi
 
 	if [[ $? -ne 0 ]]; then
@@ -611,6 +611,7 @@ fi
 # Get other arguments
 DEBUG=false
 DEFAULT_VERSION=true
+BUILD_ARGS=
 
 while [[ $# -gt 0 ]]; do
 	case $1 in
@@ -619,6 +620,9 @@ while [[ $# -gt 0 ]]; do
 			;;
 		-nv|--no-default-version)
 			DEFAULT_VERSION=false
+			;;
+		-b|--build-args)
+			shift && BUILD_ARGS="$1"
 			;;
 	esac
 	shift
