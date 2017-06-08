@@ -472,12 +472,14 @@ _zest_integrate() {
 	fi
 
 	# Run compose
+	DOCKER_COMPOSE_UP_OPTIONS="--abort-on-container-exit --exit-code-from $INTEGRATE_SERVICE $INTEGRATE_SERVICE"
+
 	if [[ -r $COMPOSE_INTEGRATE_FILE ]]; then
 		_debug "running compose with integrate overrides"
-		docker-compose -f $COMPOSE_FILE -f $COMPOSE_INTEGRATE_FILE up $INTEGRATE_SERVICE
+		docker-compose -f $COMPOSE_FILE -f $COMPOSE_INTEGRATE_FILE up $DOCKER_COMPOSE_UP_OPTIONS
 	else
 		_debug "running compose"
-		docker-compose -f $COMPOSE_FILE up $INTEGRATE_SERVICE
+		docker-compose -f $COMPOSE_FILE up $DOCKER_COMPOSE_UP_OPTIONS
 	fi
 
 	# Integrate finished
@@ -490,7 +492,7 @@ _zest_integrate() {
 
 	# Inspect containers to see if they exited
 	# docker-compose ps doesn't support -a so we need to use docker ps
-	INTEGRATE_EXIT_CODE=`docker ps -a -q -f name=${PROJECT_NAME}_${INTEGRATE_SERVICE}_1 | xargs docker inspect -f '{{ .State.ExitCode }}' | grep -v 0 | wc -l | tr -d ' '`
+	INTEGRATE_EXIT_CODE=$?
 
 	_debug "Compose exited with status $INTEGRATE_EXIT_CODE"
 
