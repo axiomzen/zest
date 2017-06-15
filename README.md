@@ -4,7 +4,14 @@ Tests with a twist!
 Zest is to assist with docker-driven workflow in both a local dev environment and in build servers.
 
 ## Requirements
-Zest requires `zest`, `_zester`, `docker`, and `docker-compose` (v1.12 or newer) to be installed in your PATH. The Docker daemon must be running.
+Zest requires `zest`, `_zester`, `docker`, and `docker-compose` (v1.12 or newer, see below)
+to be installed in your PATH. The Docker daemon must be running. 
+
+You must have docker-compose >= 1.12 installed. It is included in Docker for Mac edge since 17.04.
+The latest version of Docker for Mac stable (17.03) does not yet bundle this version. 
+Either use https://github.com/axiomzen/zest/commit/d6afabaa7100b56b326abab55fa11c4e4b71c4b1 
+or [update docker-compose](https://docs.docker.com/compose/install/). 
+
 
 # Services and Projects
 Zest works in 2 ways: operating on single services, and on multi-service projects.
