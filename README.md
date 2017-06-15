@@ -4,7 +4,7 @@ Tests with a twist!
 Zest is to assist with docker-driven workflow in both a local dev environment and in build servers.
 
 ## Requirements
-Zest requires `zest`, `_zester`, `docker`, and `docker-compose` to be installed in your PATH. The Docker daemon must be running.
+Zest requires `zest`, `_zester`, `docker`, and `docker-compose` (v1.12 or newer) to be installed in your PATH. The Docker daemon must be running.
 
 # Services and Projects
 Zest works in 2 ways: operating on single services, and on multi-service projects.
