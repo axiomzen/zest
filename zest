@@ -319,6 +319,65 @@ _zest_bundle() {
 	_info "Bundle success!"
 }
 
+_zest_push() {
+
+	# Get the service name (folder name)
+	SERVICE=$(basename `pwd`)
+
+	# First ensure we're a service
+	_debug "Checking service"
+	if ! _zest_is_service . ; then
+		_fatal "$SERVICE is not a service"
+	fi
+
+	# Get the version tag override
+	VERSION_OVERRIDE=$(Version)
+	if [[ ! "$VERSION_OVERRIDE" == "" ]]; then
+		VERSION=$VERSION_OVERRIDE
+	fi
+
+	# Check some version is set
+	if [[ "$VERSION" == "" ]]; then
+		_error "Version not set"
+		_error "Using 'latest'"
+		VERSION=latest
+	fi
+
+	# Get the project name
+	if [[ "$REPO" == "" ]]; then
+		REPO=$(cd ..; basename $PWD)
+		_debug "REPO not set, using $REPO"
+	fi
+
+	# check for service override
+	if [[ ! "$SERVICE_NAME" == "" ]]; then
+		SERVICE=$SERVICE_NAME
+		_debug "SERVICE_NAME set, using $SERVICE"
+	else
+		_debug "SERVICE_NAME not set, using $SERVICE"
+	fi
+
+	# Push the image
+	_info "Pushing image $REPO/$SERVICE:$VERSION"
+
+	if [[ "$IMAGE_SERVER" == "" ]]; then
+		_debug "Not using image server"
+		docker push $REPO/$SERVICE:$VERSION
+		docker push $REPO/$SERVICE:latest
+	else
+		_debug "Using image server $IMAGE_SERVER"
+		docker push $IMAGE_SERVER/$REPO/$SERVICE:$VERSION
+		docker push $IMAGE_SERVER/$REPO/$SERVICE:latest
+	fi
+
+	if [[ $? -ne 0 ]]; then
+		_fatal "Push failed"
+	fi
+
+	_info "Push success!"
+}
+
+
 _zest_test() {
 
 	# Get the service name (folder name)
@@ -588,6 +647,9 @@ case $1 in
 	stop|down)
 		COMMAND="stop"
 		;;
+	push)
+		COMMAND="push"
+		;;
 	all)
 		COMMAND="all"
 		;;
@@ -664,6 +726,9 @@ case $COMMAND in
 		;;
 	stop)
 		_zest_stop
+		;;
+	push)
+		_zest_push
 		;;
 	all)
 		_zest_all
