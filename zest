@@ -156,7 +156,7 @@ _zest_stop() {
 
 	_info "Stopping project"
 
-	docker-compose -f $COMPOSE_FILE down -v --rmi local
+	docker-compose -f $COMPOSE_FILE --verbose down --rmi local
 }
 
 _zest_cache_volumes() {
@@ -569,13 +569,18 @@ _zest_integrate() {
 }
 
 _zest_integrate_down() {
+        _debug "Checking project"
+        if ! _zest_is_project . ; then
+                _fatal "This directory is not a project"
+        fi
+
 	_debug "Cleaning up"
 	if [[ -r $COMPOSE_INTEGRATE_FILE ]]; then
 		_debug "running compose down with integrate overrides"
-		docker-compose -f $COMPOSE_FILE -f $COMPOSE_INTEGRATE_FILE down -v
+		docker-compose -f $COMPOSE_FILE -f $COMPOSE_INTEGRATE_FILE --verbose down
 	else
 		_debug "running compose down"
-		docker-compose -f $COMPOSE_FILE down -v --rmi local
+		docker-compose -f $COMPOSE_FILE --verbose down --rmi local
 	fi
 }
 
