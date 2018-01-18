@@ -38,6 +38,12 @@ _zest_get_zester() {
 		return 0
 	fi
 
+	# Directory forward
+	if [[ -x zest/_zester ]]; then
+		ZESTER_PATH=$(pwd)/zest/_zester
+		return 0
+	fi
+
 	# Home directory
 	if [[ -x $HOME/.zest/_zester ]]; then
 		ZESTER_PATH=$HOME/.zest/_zester
@@ -47,6 +53,12 @@ _zest_get_zester() {
 	# then look for it in the $PATH
 	if which _zester > /dev/null; then
 		ZESTER_PATH=$(which _zester)
+		return 0
+	fi
+
+	# try again but with ABSOLUTE_DIR
+	if [[ -x ${ABSOLUTE_DIR}/_zester ]]; then
+		ZESTER_PATH=${ABSOLUTE_DIR}/_zester
 		return 0
 	fi
 
@@ -132,7 +144,7 @@ _zest_run() {
 	# Check project
 	_debug "checking project"
 	if ! _zest_is_project . ; then
-		_fatal "Not a project"
+		_fatal "Not a zest project"
 	fi
 
 	RUN_SERVICE=`grep -E -i "^run: " Peelfile | awk '{print $2}'`
@@ -151,7 +163,7 @@ _zest_stop() {
 	# Check project
 	_debug "checking project"
 	if ! _zest_is_project . ; then
-		_fatal "Not a project"
+		_fatal "Not a zest project"
 	fi
 
 	_info "Stopping project"
@@ -513,7 +525,7 @@ _zest_integrate() {
 
 	# Make sure we're a project
 	if ! _zest_is_project . ; then
-		_fatal "Not a project."
+		_fatal "Not a zest project."
 	fi
 
 	# Get the integrate project
@@ -527,7 +539,10 @@ _zest_integrate() {
 	fi
 
 	if [[ "$PROJECT_NAME" == "" ]]; then
-		_fatal "project not specified in Peelfile"
+		_info "Project Name not found in Peelfile, going to use pwd"
+		PROJECT_NAME=${PWD##*/}
+		PROJECT_NAME=${PROJECT_NAME//-/}
+		_info "Using ${PROJECT_NAME} for project name"
 	fi
 
 	# Run compose
@@ -550,7 +565,6 @@ _zest_integrate() {
 	# <project name>_<service name>_1
 
 	# Inspect containers to see if they exited
-	# docker-compose ps doesn't support -a so we need to use docker ps
 	INTEGRATE_EXIT_CODE=$?
 
 	_debug "Compose exited with status $INTEGRATE_EXIT_CODE"
@@ -571,7 +585,7 @@ _zest_integrate() {
 _zest_integrate_down() {
         _debug "Checking project"
         if ! _zest_is_project . ; then
-                _fatal "This directory is not a project"
+                _fatal "This directory is not a zest project"
         fi
 
 	_debug "Cleaning up"
@@ -598,12 +612,21 @@ _zest_all() {
 		_debug "Checking $dir"
 		if _zest_is_service $dir; then
 			_info "Zesting $dir"
-			bash -c "cd $dir; zest build && zest test && zest bundle" || _fatal "Zest all failed"
+
+			if $DEBUG; then
+		    	bash -c "cd $dir; $ABSOLUTE_PATH build -v && $ABSOLUTE_PATH test -v && $ABSOLUTE_PATH bundle -v" || _fatal "Zest all failed"
+			else
+				bash -c "cd $dir; $ABSOLUTE_PATH build && $ABSOLUTE_PATH test && $ABSOLUTE_PATH bundle" || _fatal "Zest all failed"
+			fi
 		fi
 	done
 
 	# Run integration tests
-	( zest integrate && _info "Zest all completed succesfully" ) || ( zest disintegrate; _fatal "Zest all failed" )
+	if $DEBUG; then
+		( $ABSOLUTE_PATH integrate -v && _info "Zest all completed succesfully" ) || ( $ABSOLUTE_PATH disintegrate -v; _fatal "Zest all failed" )
+	else
+		( $ABSOLUTE_PATH integrate && _info "Zest all completed succesfully" ) || ( $ABSOLUTE_PATH disintegrate; _fatal "Zest all failed" )
+	fi
 }
 
 _zest_help() {
@@ -676,6 +699,10 @@ if [[ "$COMMAND" == "unknown" ]]; then
 	_zest_help
 	exit 1
 fi
+
+# Globals
+ABSOLUTE_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+ABSOLUTE_DIR=$(cd `dirname "${BASH_SOURCE[0]}"` && pwd)
 
 # Get other arguments
 DEBUG=false
