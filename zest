@@ -26,20 +26,27 @@ _debug() {
 # find the _zester script
 _zest_get_zester() {
 
-	# First look for _zester in the pwd
-	if [[ -x _zester ]]; then
+	# right beside where we live
+	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+	if [[ -x $DIR/_zester ]]; then
+		ZESTER_PATH=$DIR/_zester
+		return 0
+	fi
+
+	# try look for _zester in the pwd
+	if [[ -x $(pwd)/_zester ]]; then
 		ZESTER_PATH=$(pwd)/_zester
 		return 0
 	fi
 
 	# Directory up
-	if [[ -x ../_zester ]]; then
+	if [[ -x $(pwd)/../_zester ]]; then
 		ZESTER_PATH=$(pwd)/../_zester
 		return 0
 	fi
 
 	# Directory forward
-	if [[ -x zest/_zester ]]; then
+	if [[ -x $(pwd)/zest/_zester ]]; then
 		ZESTER_PATH=$(pwd)/zest/_zester
 		return 0
 	fi
@@ -167,8 +174,8 @@ _zest_stop() {
 	fi
 
 	_info "Stopping project"
-
-	docker-compose -f $COMPOSE_FILE --verbose down --rmi local
+	
+	docker-compose -f $COMPOSE_FILE $DOCKER_VERBOSE down --rmi local
 }
 
 _zest_cache_volumes() {
@@ -178,7 +185,7 @@ _zest_cache_volumes() {
 
 	# handle legacy variables
 	if [[ ! -z $CACHE_DIR_SRC && ! -z $CACHE_DIR_DST ]]; then
-		_debug "Including cache directory $CACHE_DIR_SRC => $CACHE_DIR_DST"
+		# _debug "Including cache directory $CACHE_DIR_SRC => $CACHE_DIR_DST"
 		cache_mounts+=("$CACHE_DIR_SRC:$CACHE_DIR_DST")
 	fi
 
@@ -188,7 +195,7 @@ _zest_cache_volumes() {
 		for ((i=0; i < $cache_dir_count; i++)); do
 			src=${CACHE_DIR_SRCS[$i]}
 			dst=${CACHE_DIR_DSTS[$i]}
-			_debug "Including cache directory $src => $dst"
+			# _debug "Including cache directory $src => $dst"
 			cache_mounts+=("$src:$dst")
 		done
 	fi
@@ -223,11 +230,11 @@ _zest_build() {
 	fi
 	_debug "Found _zester at $ZESTER_PATH"
 
-	# Check for service override
+	# check for service override
 	if [[ ! "$SERVICE_NAME" == "" ]]; then
-		SERVICE=$SERVICE_NAME
-		_debug "SERVICE_NAME set, using $SERVICE"
+		_debug "SERVICE_NAME set, using $SERVICE_NAME"
 	else
+		SERVICE_NAME=$SERVICE
 		_debug "SERVICE_NAME not set, using $SERVICE"
 	fi
 
@@ -240,9 +247,9 @@ _zest_build() {
 	fi
 
 	# Build in the container
-	_info "Building service $SERVICE in $BUILD_CONTAINER"
+	_info "Building service $SERVICE_NAME in $BUILD_CONTAINER"
 
-	docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester:ro $(_zest_cache_volumes) $BUILD_CONTAINER zester build --name $SERVICE
+	docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester:ro $(_zest_cache_volumes) $BUILD_CONTAINER zester build --name $SERVICE_NAME
 
 	if [[ $? -ne 0 ]]; then
 		_fatal "Build failed"
@@ -417,15 +424,15 @@ _zest_test() {
 
 	# check for service override
 	if [[ ! "$SERVICE_NAME" == "" ]]; then
-		SERVICE=$SERVICE_NAME
-		_debug "SERVICE_NAME set, using $SERVICE"
+		_debug "SERVICE_NAME set, using $SERVICE_NAME"
 	else
+		SERVICE_NAME=$SERVICE
 		_debug "SERVICE_NAME not set, using $SERVICE"
 	fi
-
+	
 	# Build in the container
 	_info "Testing service $SERVICE in $TEST_CONTAINER"
-	docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester:ro $(_zest_cache_volumes) $TEST_CONTAINER zester test --name $SERVICE
+	docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester:ro $(_zest_cache_volumes) $TEST_CONTAINER zester test --name $SERVICE_NAME
 
 	if [[ $? -ne 0 ]]; then
 		_fatal "Test failed"
@@ -509,9 +516,9 @@ _zest_enter() {
 
 	# check for service override
 	if [[ ! "$SERVICE_NAME" == "" ]]; then
-		SERVICE=$SERVICE_NAME
-		_debug "SERVICE_NAME set, using $SERVICE"
+		_debug "SERVICE_NAME set, using $SERVICE_NAME"
 	else
+		SERVICE_NAME=$SERVICE
 		_debug "SERVICE_NAME not set, using $SERVICE"
 	fi
 
@@ -591,10 +598,10 @@ _zest_integrate_down() {
 	_debug "Cleaning up"
 	if [[ -r $COMPOSE_INTEGRATE_FILE ]]; then
 		_debug "running compose down with integrate overrides"
-		docker-compose -f $COMPOSE_FILE -f $COMPOSE_INTEGRATE_FILE --verbose down
+		docker-compose -f $COMPOSE_FILE -f $COMPOSE_INTEGRATE_FILE $DOCKER_VERBOSE down
 	else
 		_debug "running compose down"
-		docker-compose -f $COMPOSE_FILE --verbose down --rmi local
+		docker-compose -f $COMPOSE_FILE $DOCKER_VERBOSE down --rmi local
 	fi
 }
 
@@ -612,21 +619,12 @@ _zest_all() {
 		_debug "Checking $dir"
 		if _zest_is_service $dir; then
 			_info "Zesting $dir"
-
-			if $DEBUG; then
-		    	bash -c "cd $dir; $ABSOLUTE_PATH build -v && $ABSOLUTE_PATH test -v && $ABSOLUTE_PATH bundle -v" || _fatal "Zest all failed"
-			else
-				bash -c "cd $dir; $ABSOLUTE_PATH build && $ABSOLUTE_PATH test && $ABSOLUTE_PATH bundle" || _fatal "Zest all failed"
-			fi
+			bash -c "cd $dir; $ABSOLUTE_PATH build $GO_VERBOSE && $ABSOLUTE_PATH test $GO_VERBOSE && $ABSOLUTE_PATH bundle $GO_VERBOSE" || _fatal "Zest all failed"
 		fi
 	done
 
 	# Run integration tests
-	if $DEBUG; then
-		( $ABSOLUTE_PATH integrate -v && _info "Zest all completed succesfully" ) || ( $ABSOLUTE_PATH disintegrate -v; _fatal "Zest all failed" )
-	else
-		( $ABSOLUTE_PATH integrate && _info "Zest all completed succesfully" ) || ( $ABSOLUTE_PATH disintegrate; _fatal "Zest all failed" )
-	fi
+	( $ABSOLUTE_PATH integrate $GO_VERBOSE && _info "Zest all completed succesfully" ) || ( $ABSOLUTE_PATH disintegrate $GO_VERBOSE; _fatal "Zest all failed" )
 }
 
 _zest_help() {
@@ -669,7 +667,7 @@ case $1 in
 	disintegrate)
 		COMMAND="disintegrate"
 		;;
-	run)
+	run|up)
 		COMMAND="run"
 		;;
 	stop|down)
@@ -708,11 +706,15 @@ ABSOLUTE_DIR=$(cd `dirname "${BASH_SOURCE[0]}"` && pwd)
 DEBUG=false
 DEFAULT_VERSION=true
 BUILD_ARGS=
+DOCKER_VERBOSE=
+GO_VERBOSE=
 
 while [[ $# -gt 0 ]]; do
 	case $1 in
 		-d|--debug|-v|--verbose)
 			DEBUG=true
+			DOCKER_VERBOSE="--verbose"
+			GO_VERBOSE="-v"
 			;;
 		-nv|--no-default-version)
 			DEFAULT_VERSION=false
