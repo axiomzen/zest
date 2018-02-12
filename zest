@@ -615,7 +615,7 @@ _zest_all() {
 	_info "Running zest on all possible sub services"
 
 	# Look for services in root folder and folders down
-	for dir in `find . -type d -maxdepth 1`; do
+	for dir in `find . -type d -maxdepth 2`; do
 		_debug "Checking $dir"
 		if _zest_is_service $dir; then
 			_info "Zesting $dir"
