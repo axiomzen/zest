@@ -12,6 +12,14 @@ The latest version of Docker for Mac stable (17.03) does not yet bundle this ver
 Either use https://github.com/axiomzen/zest/commit/d6afabaa7100b56b326abab55fa11c4e4b71c4b1 
 or [update docker-compose](https://docs.docker.com/compose/install/). 
 
+## Installation
+To install things system wide use `sudo make install`, which will copy the binaries and relevant configs into `/usr/local`.
+
+Zest also runs fine out of a local directory, if this repository is present as `./zest`
+
+Zest can also be installed in your home directory as `~/.zest`
+
+`zest init-service` expects to copy the initial Zestfile from `/usr/local/share/zest` so if your zest is not installed system wide you can copy the `Zestfile.example` into `Zestfile` manually to init a service.
 
 # Services and Projects
 Zest works in 2 ways: operating on single services, and on multi-service projects.
