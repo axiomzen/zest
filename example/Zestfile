@@ -12,7 +12,7 @@ DOCKER_FILE=
 # BUILD_CONTAINER (required for build command)
 # Specify a container to build your application in
 # In [repo/]image[:tag] format
-BUILD_CONTAINER=golang:1.6
+BUILD_CONTAINER=golang:latest
 
 # TEST_CONTAINER (required if BUILD_CONTAINER not specified)
 # The container to put your application in to launch tests
@@ -95,6 +95,13 @@ Version() {
 	# ex:
 	# git describe --tags
 	git describe --tag 2> /dev/null
+}
+
+# Revision()
+# The full git commit hash or something equivalent
+# Used for feeding the VERSION variable into the container
+Revision() {
+	git rev-parse HEAD 2> /dev/null
 }
 
 # PreBundle()

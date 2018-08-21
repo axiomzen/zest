@@ -98,6 +98,13 @@ Version() {
 	:
 }
 
+# Revision()
+# The full git commit hash or something equivalent
+# Used for feeding the VERSION variable into the container
+Revision() {
+	git rev-parse HEAD 2> /dev/null
+}
+
 # PreBundle()
 # The script to be executed outside of the build container (local machine)
 # before the bundle step
