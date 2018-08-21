@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	fmt.Println("Running in:", os.Getenv("ENVIRONMENT"))
+	fmt.Printf("Running in: %s, revision: %s\n", os.Getenv("ENVIRONMENT"), os.Getenv("REVISION"))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, "Hello world!")

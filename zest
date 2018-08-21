@@ -290,6 +290,14 @@ _zest_bundle() {
 		VERSION=latest
 	fi
 
+	# Get the revision
+	REVISION_OVERRIDE=$(Revision)
+	if [[ "$REVISION_OVERRIDE" == "" ]]; then
+		_error "Revision not set"
+		_error "Using 'unversioned'"
+		REVISION_OVERRIDE=unversioned
+	fi
+
 	# Get the project name
 	if [[ "$REPO" == "" ]]; then
 		REPO=$(cd ..; basename $PWD)
@@ -317,10 +325,10 @@ _zest_bundle() {
 
 	if [[ "$IMAGE_SERVER" == "" ]]; then
 		_debug "Not using image server"
-		docker build $BUILD_ARGS -t $REPO/$SERVICE:$VERSION -t $REPO/$SERVICE:latest -f $DOCKERFILE .
+		docker build $BUILD_ARGS --build-arg REVISION=$REVISION_OVERRIDE -t $REPO/$SERVICE:$VERSION -t $REPO/$SERVICE:latest -f $DOCKERFILE .
 	else
 		_debug "Using image server $IMAGE_SERVER"
-		docker build $BUILD_ARGS -t $IMAGE_SERVER/$REPO/$SERVICE:$VERSION -t $IMAGE_SERVER/$REPO/$SERVICE:latest -f $DOCKERFILE .
+		docker build $BUILD_ARGS --build-arg REVISION=$REVISION_OVERRIDE -t $IMAGE_SERVER/$REPO/$SERVICE:$VERSION -t $IMAGE_SERVER/$REPO/$SERVICE:latest -f $DOCKERFILE .
 	fi
 
 	if [[ $? -ne 0 ]]; then

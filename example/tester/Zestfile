@@ -12,7 +12,7 @@ DOCKER_FILE=
 # BUILD_CONTAINER (required for build command)
 # Specify a container to build your application in
 # In [repo/]image[:tag] format
-BUILD_CONTAINER=golang:1.7
+BUILD_CONTAINER=golang:latest
 
 # TEST_CONTAINER (required if BUILD_CONTAINER not specified)
 # The container to put your application in to launch tests
