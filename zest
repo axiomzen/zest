@@ -293,8 +293,8 @@ _zest_bundle() {
 	# Get the revision
 	REVISION_OVERRIDE=$(Revision)
 	if [[ "$REVISION_OVERRIDE" == "" ]]; then
-	    _error "Revision not set"
-	    _error "Using 'unversioned'"
+		_error "Revision not set"
+		_error "Using 'unversioned'"
 		REVISION_OVERRIDE=unversioned
 	fi
 
