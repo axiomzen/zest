@@ -126,6 +126,16 @@ _zest_is_project() {
 
 	_debug "Using docker-compose file at $COMPOSE_FILE"
 
+    #Check to see what development compose file we should use
+	COMPOSE_DEV_FILE=`grep -E -i "^compose-development: " Peelfile | awk '{print $2}'`
+
+	# If its blank, use default
+	if [[ "$COMPOSE_INTEGRATE_FILE" == "" ]]; then
+		COMPOSE_DEV_FILE=$1/docker-compose.dev.yml
+	else
+		COMPOSE_DEV_FILE=$1/$COMPOSE_INTEGRATE_FILE
+	fi
+
 	# Check to see what integration compose file we should use
 	COMPOSE_INTEGRATE_FILE=`grep -E -i "^compose-integrate: " Peelfile | awk '{print $2}'`
 
@@ -174,8 +184,27 @@ _zest_stop() {
 	fi
 
 	_info "Stopping project"
-	
+
 	docker-compose -f $COMPOSE_FILE $DOCKER_VERBOSE down --rmi local
+}
+
+_zest_dev() {
+
+	# Check project
+	_debug "checking project"
+	if ! _zest_is_project . ; then
+		_fatal "Not a zest project"
+	fi
+
+	RUN_SERVICE=`grep -E -i "^run: " Peelfile | awk '{print $2}'`
+
+	if [[ "$RUN_SERVICE" == "" ]]; then
+		_fatal "run: not specified in Peelfile"
+	fi
+
+	_info "Running service $RUN_SERVICE with gin in $COMPOSE_DEV_FILE"
+
+	docker-compose -f $COMPOSE_FILE -f $COMPOSE_DEV_FILE up --build -d $RUN_SERVICE
 }
 
 _zest_cache_volumes() {
@@ -290,14 +319,6 @@ _zest_bundle() {
 		VERSION=latest
 	fi
 
-	# Get the revision
-	REVISION_OVERRIDE=$(Revision)
-	if [[ "$REVISION_OVERRIDE" == "" ]]; then
-		_error "Revision not set"
-		_error "Using 'unversioned'"
-		REVISION_OVERRIDE=unversioned
-	fi
-
 	# Get the project name
 	if [[ "$REPO" == "" ]]; then
 		REPO=$(cd ..; basename $PWD)
@@ -404,7 +425,6 @@ _zest_push() {
 	_info "Push success!"
 }
 
-
 _zest_test() {
 
 	# Get the service name (folder name)
@@ -437,7 +457,7 @@ _zest_test() {
 		SERVICE_NAME=$SERVICE
 		_debug "SERVICE_NAME not set, using $SERVICE"
 	fi
-	
+
 	# Build in the container
 	_info "Testing service $SERVICE in $TEST_CONTAINER"
 	docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester:ro $(_zest_cache_volumes) $TEST_CONTAINER zester test --name $SERVICE_NAME
@@ -623,7 +643,7 @@ _zest_all() {
 	_info "Running zest on all possible sub services"
 
 	# Look for services in root folder and folders down
-	for dir in `find . -type d -maxdepth 2`; do
+	for dir in `find . -type d -maxdepth 3`; do
 		_debug "Checking $dir"
 		if _zest_is_service $dir; then
 			_info "Zesting $dir"
@@ -678,6 +698,9 @@ case $1 in
 	run|up)
 		COMMAND="run"
 		;;
+    dev)
+        COMMAND="dev"
+        ;;
 	stop|down)
 		COMMAND="stop"
 		;;
@@ -763,6 +786,9 @@ case $COMMAND in
 	disintegrate)
 		_zest_integrate_down
 		;;
+    dev)
+        _zest_dev
+        ;;
 	run)
 		_zest_run
 		;;
