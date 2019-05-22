@@ -154,11 +154,11 @@ _zest_run() {
 		_fatal "Not a zest project"
 	fi
 
-	RUN_SERVICE=`grep -E -i "^run: " Peelfile | awk '{print $2}'`
+    RUN_SERVICE="${SERVICE_ARG:-`grep -E -i "^run: " Peelfile | awk '{print $2}'`}"
 
 	if [[ "$RUN_SERVICE" == "" ]]; then
-		_fatal "run: not specified in Peelfile"
-	fi
+		_fatal "run: not specified in Peelfile nor in --service"
+    fi
 
 	_info "Running service $RUN_SERVICE"
 
@@ -174,7 +174,7 @@ _zest_stop() {
 	fi
 
 	_info "Stopping project"
-	
+
 	docker-compose -f $COMPOSE_FILE $DOCKER_VERBOSE down --rmi local
 }
 
@@ -437,7 +437,7 @@ _zest_test() {
 		SERVICE_NAME=$SERVICE
 		_debug "SERVICE_NAME not set, using $SERVICE"
 	fi
-	
+
 	# Build in the container
 	_info "Testing service $SERVICE in $TEST_CONTAINER"
 	docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester:ro $(_zest_cache_volumes) $TEST_CONTAINER zester test --name $SERVICE_NAME
@@ -716,6 +716,7 @@ DEFAULT_VERSION=true
 BUILD_ARGS=
 DOCKER_VERBOSE=
 GO_VERBOSE=
+SERVICE_ARG=
 
 while [[ $# -gt 0 ]]; do
 	case $1 in
@@ -730,6 +731,10 @@ while [[ $# -gt 0 ]]; do
 		-b|--build-args)
 			shift && BUILD_ARGS="$1"
 			;;
+		-s|--service)
+			shift && SERVICE_ARG="$1"
+			;;
+
 	esac
 	shift
 done

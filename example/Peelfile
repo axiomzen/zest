@@ -3,3 +3,4 @@ integrate: integrater
 project: example
 compose: docker-compose.yml
 compose-integrate: docker-compose.integrate.yml
+compose-development: docker-compose.dev.yml
