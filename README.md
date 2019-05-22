@@ -34,7 +34,6 @@ Command | Result
 --------|-------
 init-service | Creates the prerequisite files for the current directory to be a zestable service
 build   | Runs the `Build()` script inside the build container
-dev     | Runs the `Dev()` script allowing for hot reloading of development containers
 enter   | Launch an interactive shell inside the build container
 test    | Runs the `Test()` script inside the test container
 bundle  | Build the final container with the provided Dockerfile and tag with both version and latest
@@ -52,6 +51,7 @@ Command | Result
 init-project | Creates the prerequisite files for the current directory to be a zestable project
 integrate | Run integration tests on a project
 run | Start the environment with docker-compose
+dev | Runs the project with `gin` for every container; allows for hot reloading
 stop | clean up the docker-compose environment
 all | build, test, bundle all folders in the pwd that are services, then integrate
 
