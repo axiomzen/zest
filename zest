@@ -210,12 +210,18 @@ _zest_cache_volumes() {
 
 _zest_build() {
 
-	# Get the service name (folder name)
-	SERVICE=$(basename `pwd`)
+    SERVICE="${SERVICE_ARG:-$(basename `pwd`)}"
 
 	# First ensure we're a service
-	_debug "Checking service"
-	if ! _zest_is_service . ; then
+	_debug "Checking service ${SERVICE}"
+
+    SERVICEPATH=$(find . -type d -maxdepth 2 | grep ${SERVICE} | head -n 1)
+    if [[ "$SERVICEPATH" == "" ]]; then
+	 _debug "Service path is empty, setting to current path"
+       SERVICEPATH="."
+    fi
+
+	if ! _zest_is_service $SERVICEPATH ; then
 		_fatal "$SERVICE is not a service"
 	fi
 
@@ -627,7 +633,7 @@ _zest_all() {
 		_debug "Checking $dir"
 		if _zest_is_service $dir; then
 			_info "Zesting $dir"
-			bash -c "cd $dir; $ABSOLUTE_PATH build $GO_VERBOSE && $ABSOLUTE_PATH test $GO_VERBOSE && $ABSOLUTE_PATH bundle $GO_VERBOSE" || _fatal "Zest all failed"
+			bash -c "$ABSOLUTE_PATH build -s $dir $GO_VERBOSE && $ABSOLUTE_PATH test $GO_VERBOSE && $ABSOLUTE_PATH bundle $GO_VERBOSE" || _fatal "Zest all failed"
 		fi
 	done
 
@@ -731,7 +737,7 @@ while [[ $# -gt 0 ]]; do
 		-b|--build-args)
 			shift && BUILD_ARGS="$1"
 			;;
-		-s|--service)
+		-s|--service|--service-path)
 			shift && SERVICE_ARG="$1"
 			;;
 
