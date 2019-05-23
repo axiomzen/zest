@@ -82,7 +82,7 @@ _zest_is_service() {
 	fi
 
 	# load the Zestfile
-	_debug "Loading Zestfile"
+	_debug "Loading Zestfile at ${1}/Zestfile"
 	source $1/Zestfile
 
 	# check for docker file override
@@ -185,7 +185,7 @@ _zest_cache_volumes() {
 
 	# handle legacy variables
 	if [[ ! -z $CACHE_DIR_SRC && ! -z $CACHE_DIR_DST ]]; then
-		# _debug "Including cache directory $CACHE_DIR_SRC => $CACHE_DIR_DST"
+		 #_debug "Including cache directory $CACHE_DIR_SRC => $CACHE_DIR_DST"
 		cache_mounts+=("$CACHE_DIR_SRC:$CACHE_DIR_DST")
 	fi
 
@@ -193,8 +193,7 @@ _zest_cache_volumes() {
 	if [[ ! -z $CACHE_DIR_SRCS && ! -z $CACHE_DIR_DSTS ]]; then
 		cache_dir_count=${#CACHE_DIR_SRCS[@]}
 		for ((i=0; i < $cache_dir_count; i++)); do
-			src=${CACHE_DIR_SRCS[$i]}
-			dst=${CACHE_DIR_DSTS[$i]}
+			src=${CACHE_DIR_SRCS[$i]} dst=${CACHE_DIR_DSTS[$i]}
 			# _debug "Including cache directory $src => $dst"
 			cache_mounts+=("$src:$dst")
 		done
@@ -215,13 +214,16 @@ _zest_build() {
 	# First ensure we're a service
 	_debug "Checking service ${SERVICE}"
 
-    SERVICEPATH=$(find . -type d -maxdepth 2 | grep ${SERVICE} | head -n 1)
-    if [[ "$SERVICEPATH" == "" ]]; then
-	 _debug "Service path is empty, setting to current path"
-       SERVICEPATH="."
+    SERVICE_PATH=$(find $(pwd) -type d -maxdepth 2 | grep ${SERVICE} | head -n 1)
+
+    if [[ "$SERVICE_PATH" == "" ]]; then
+	    _debug "Service path is empty, setting to current path"
+        SERVICE_PATH=$(pwd)
     fi
 
-	if ! _zest_is_service $SERVICEPATH ; then
+    _debug "service_path: ${SERVICE_PATH}"
+
+	if ! _zest_is_service $SERVICE_PATH ; then
 		_fatal "$SERVICE is not a service"
 	fi
 
@@ -254,8 +256,14 @@ _zest_build() {
 
 	# Build in the container
 	_info "Building service $SERVICE_NAME in $BUILD_CONTAINER"
+    # _debug "servicepath: $SERVICE_PATH"
+    # _debug "mountDir: $MOUNT_DIR"
+    # _debug "service: $SERVICE"
+    # _debug "build container: $BUILD_CONTAINER"
+    # _debug "zesterpath: $ZESTER_PATH"
+    # _debug "cachevolumes: $(_zest_cache_volumes)"
 
-	docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester:ro $(_zest_cache_volumes) $BUILD_CONTAINER zester build --name $SERVICE_NAME
+	docker run --rm -v $SERVICE_PATH:$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester:ro $(_zest_cache_volumes) $BUILD_CONTAINER zester build --name $SERVICE_NAME
 
 	if [[ $? -ne 0 ]]; then
 		_fatal "Build failed"
@@ -274,12 +282,21 @@ _zest_build() {
 
 _zest_bundle() {
 
-	# Get the service name (folder name)
-	SERVICE=$(basename `pwd`)
+    SERVICE="${SERVICE_ARG:-$(basename `pwd`)}"
 
 	# First ensure we're a service
-	_debug "Checking service"
-	if ! _zest_is_service . ; then
+	_debug "Checking service ${SERVICE}"
+
+    SERVICE_PATH=$(find $(pwd) -type d -maxdepth 2 | grep ${SERVICE} | head -n 1)
+
+    if [[ "$SERVICE_PATH" == "" ]]; then
+	    _debug "Service path is empty, setting to current path"
+        SERVICE_PATH=$(pwd)
+    fi
+
+    _debug "service_path: ${SERVICE_PATH}"
+
+	if ! _zest_is_service $SERVICE_PATH ; then
 		_fatal "$SERVICE is not a service"
 	fi
 
@@ -331,10 +348,12 @@ _zest_bundle() {
 
 	if [[ "$IMAGE_SERVER" == "" ]]; then
 		_debug "Not using image server"
-		docker build $BUILD_ARGS --build-arg REVISION=$REVISION_OVERRIDE -t $REPO/$SERVICE:$VERSION -t $REPO/$SERVICE:latest -f $DOCKERFILE .
+        _debug "-f $DOCKERFILE $SERVICE_PATH"
+		docker build $BUILD_ARGS --build-arg REVISION=$REVISION_OVERRIDE -t $REPO/$SERVICE:$VERSION -t $REPO/$SERVICE:latest -f $SERVICE_PATH/$DOCKERFILE $SERVICE_PATH
 	else
 		_debug "Using image server $IMAGE_SERVER"
-		docker build $BUILD_ARGS --build-arg REVISION=$REVISION_OVERRIDE -t $IMAGE_SERVER/$REPO/$SERVICE:$VERSION -t $IMAGE_SERVER/$REPO/$SERVICE:latest -f $DOCKERFILE .
+		docker build $BUILD_ARGS --build-arg REVISION=$REVISION_OVERRIDE -t $IMAGE_SERVER/$REPO/$SERVICE:$VERSION -t $IMAGE_SERVER/$REPO/$SERVICE:latest -f $SERVICE_PATH/$DOCKERFILE $SERVICE_PATH
+
 	fi
 
 	if [[ $? -ne 0 ]]; then
@@ -413,14 +432,24 @@ _zest_push() {
 
 _zest_test() {
 
-	# Get the service name (folder name)
-	SERVICE=$(basename `pwd`)
+    SERVICE="${SERVICE_ARG:-$(basename `pwd`)}"
 
 	# First ensure we're a service
-	_debug "Checking service"
-	if ! _zest_is_service . ; then
+	_debug "Checking service ${SERVICE}"
+
+    SERVICE_PATH=$(find $(pwd) -type d -maxdepth 2 | grep ${SERVICE} | head -n 1)
+
+    if [[ "$SERVICE_PATH" == "" ]]; then
+	    _debug "Service path is empty, setting to current path"
+        SERVICE_PATH=$(pwd)
+    fi
+
+    _debug "service_path: ${SERVICE_PATH}"
+
+	if ! _zest_is_service $SERVICE_PATH ; then
 		_fatal "$SERVICE is not a service"
 	fi
+
 
 	# Must have $TEST_CONTAINER or $BUILD_CONTAINER set
 	if [[ "$TEST_CONTAINER" == "" ]]; then
@@ -446,7 +475,7 @@ _zest_test() {
 
 	# Build in the container
 	_info "Testing service $SERVICE in $TEST_CONTAINER"
-	docker run --rm -v $(pwd):$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester:ro $(_zest_cache_volumes) $TEST_CONTAINER zester test --name $SERVICE_NAME
+	docker run --rm -v $SERVICE_PATH:$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester:ro $(_zest_cache_volumes) $TEST_CONTAINER zester test --name $SERVICE_NAME
 
 	if [[ $? -ne 0 ]]; then
 		_fatal "Test failed"
@@ -633,7 +662,7 @@ _zest_all() {
 		_debug "Checking $dir"
 		if _zest_is_service $dir; then
 			_info "Zesting $dir"
-			bash -c "$ABSOLUTE_PATH build -s $dir $GO_VERBOSE && $ABSOLUTE_PATH test $GO_VERBOSE && $ABSOLUTE_PATH bundle $GO_VERBOSE" || _fatal "Zest all failed"
+			bash -c "$ABSOLUTE_PATH build -s $dir $GO_VERBOSE && $ABSOLUTE_PATH test -s $dir $GO_VERBOSE && $ABSOLUTE_PATH bundle -s $dir $GO_VERBOSE" || _fatal "Zest all failed"
 		fi
 	done
 
