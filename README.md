@@ -5,12 +5,12 @@ Zest is to assist with docker-driven workflow in both a local dev environment an
 
 ## Requirements
 Zest requires `zest`, `_zester`, `docker`, and `docker-compose` (v1.12 or newer, see below)
-to be installed in your PATH. The Docker daemon must be running. 
+to be installed in your PATH. The Docker daemon must be running.
 
 You must have docker-compose >= 1.12 installed. It is included in Docker for Mac edge since 17.04.
-The latest version of Docker for Mac stable (17.03) does not yet bundle this version. 
-Either use https://github.com/axiomzen/zest/commit/d6afabaa7100b56b326abab55fa11c4e4b71c4b1 
-or [update docker-compose](https://docs.docker.com/compose/install/). 
+The latest version of Docker for Mac stable (17.03) does not yet bundle this version.
+Either use https://github.com/axiomzen/zest/commit/d6afabaa7100b56b326abab55fa11c4e4b71c4b1
+or [update docker-compose](https://docs.docker.com/compose/install/).
 
 ## Installation
 To install things system wide use `sudo make install`, which will attempt to copy the binaries and relevant configs into `/usr/local` as well as the users `~/.zest` directories.
@@ -50,7 +50,7 @@ Command | Result
 --------|--------
 init-project | Creates the prerequisite files for the current directory to be a zestable project
 integrate | Run integration tests on a project
-run | Start the environment with docker-compose
+run | Start the environment with docker-compose. Use flag `-s` or `--service SERVICENAME` to run an individual service along with its dependencies
 stop | clean up the docker-compose environment
 all | build, test, bundle all folders in the pwd that are services, then integrate
 
