@@ -154,7 +154,7 @@ _zest_run() {
 		_fatal "Not a zest project"
 	fi
 
-    RUN_SERVICE="${SERVICE_ARG:-`grep -E -i "^run: " Peelfile | awk '{print $2}'`}"
+    RUN_SERVICE="${SERVICE_PATH:-`grep -E -i "^run: " Peelfile | awk '{print $2}'`}"
 
 	if [[ "$RUN_SERVICE" == "" ]]; then
 		_fatal "run: not specified in Peelfile nor in --service"
@@ -208,8 +208,13 @@ _zest_cache_volumes() {
 }
 
 _zest_build() {
+    _debug "ABSOLUTE_PATH: $ABSOLUTE_PATH"
+    _debug "ABSOLUTE_DIR: $ABSOLUTE_DIR"
+    _debug "PATH: $(pwd)"
 
-    SERVICE="${SERVICE_ARG:-$(basename `pwd`)}"
+    _debug "Cache: $CACHE_DIR_SRCS"
+
+    SERVICE="${SERVICE_PATH:-$(basename `pwd`)}"
 
 	# First ensure we're a service
 	_debug "Checking service ${SERVICE}"
@@ -276,7 +281,7 @@ _zest_build() {
 
 _zest_create() {
 
-    SERVICE="${SERVICE_ARG:-$(basename `pwd`)}"
+    SERVICE="${SERVICE_PATH:-$(basename `pwd`)}"
 
 	# First ensure we're a service
 	_debug "Checking service ${SERVICE}"
@@ -301,7 +306,7 @@ _zest_create() {
 
 _zest_bundle() {
 
-    SERVICE="${SERVICE_ARG:-$(basename `pwd`)}"
+    SERVICE="${SERVICE_PATH:-$(basename `pwd`)}"
 
 	# First ensure we're a service
 	_debug "Checking service ${SERVICE}"
@@ -451,7 +456,7 @@ _zest_push() {
 
 _zest_test() {
 
-    SERVICE="${SERVICE_ARG:-$(basename `pwd`)}"
+    SERVICE="${SERVICE_PATH:-$(basename `pwd`)}"
 
 	# First ensure we're a service
 	_debug "Checking service ${SERVICE}"
@@ -773,7 +778,7 @@ DEFAULT_VERSION=true
 BUILD_ARGS=
 DOCKER_VERBOSE=
 GO_VERBOSE=
-SERVICE_ARG=
+SERVICE_PATH=
 
 while [[ $# -gt 0 ]]; do
 	case $1 in
@@ -788,10 +793,9 @@ while [[ $# -gt 0 ]]; do
 		-b|--build-args)
 			shift && BUILD_ARGS="$1"
 			;;
-		-s|--service|--service-path)
-			shift && SERVICE_ARG="$1"
+		*)
+			shift && SERVICE_PATH="$1"
 			;;
-
 	esac
 	shift
 done
