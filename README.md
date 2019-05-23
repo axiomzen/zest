@@ -34,6 +34,7 @@ Command | Result
 --------|-------
 init-service | Creates the prerequisite files for the current directory to be a zestable service
 build   | Runs the `Build()` script inside the build container
+create  | Runs both `build` and `bundle` on the selected container
 enter   | Launch an interactive shell inside the build container
 test    | Runs the `Test()` script inside the test container
 bundle  | Build the final container with the provided Dockerfile and tag with both version and latest

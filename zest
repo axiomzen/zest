@@ -256,12 +256,6 @@ _zest_build() {
 
 	# Build in the container
 	_info "Building service $SERVICE_NAME in $BUILD_CONTAINER"
-    # _debug "servicepath: $SERVICE_PATH"
-    # _debug "mountDir: $MOUNT_DIR"
-    # _debug "service: $SERVICE"
-    # _debug "build container: $BUILD_CONTAINER"
-    # _debug "zesterpath: $ZESTER_PATH"
-    # _debug "cachevolumes: $(_zest_cache_volumes)"
 
 	docker run --rm -v $SERVICE_PATH:$MOUNT_DIR/$SERVICE -w $MOUNT_DIR/$SERVICE -v $ZESTER_PATH:/usr/bin/zester:ro $(_zest_cache_volumes) $BUILD_CONTAINER zester build --name $SERVICE_NAME
 
@@ -278,6 +272,31 @@ _zest_build() {
 	fi
 
 	_info "Build success!"
+}
+
+_zest_create() {
+
+    SERVICE="${SERVICE_ARG:-$(basename `pwd`)}"
+
+	# First ensure we're a service
+	_debug "Checking service ${SERVICE}"
+
+    SERVICE_PATH=$(find $(pwd) -type d -maxdepth 2 | grep ${SERVICE} | head -n 1)
+
+    if [[ "$SERVICE_PATH" == "" ]]; then
+	    _debug "Service path is empty, setting to current path"
+        SERVICE_PATH=$(pwd)
+    fi
+
+    _debug "service_path: ${SERVICE_PATH}"
+
+	if ! _zest_is_service $SERVICE_PATH ; then
+		_fatal "$SERVICE is not a service"
+	fi
+
+	bash -c "$ABSOLUTE_PATH build -s $SERVICE_PATH $GO_VERBOSE && $ABSOLUTE_PATH test -s $SERVICE_PATH $GO_VERBOSE && $ABSOLUTE_PATH bundle -s $SERVICE_PATH $GO_VERBOSE" || _fatal "Zest build failed"
+
+	_info "Create success!"
 }
 
 _zest_bundle() {
@@ -689,6 +708,9 @@ case $1 in
 	test)
 		COMMAND="test"
 		;;
+	create)
+		COMMAND="create"
+		;;
 	version)
 		COMMAND="version"
 		;;
@@ -781,6 +803,9 @@ case $COMMAND in
 		;;
 	bundle)
 		_zest_bundle
+		;;
+	create)
+		_zest_create
 		;;
 	test)
 		_zest_test
